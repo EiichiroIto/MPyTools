@@ -115,7 +115,7 @@ MPyProxyTest >> testCheckRawPrompt [
 	p := self newProxy.
 	p receiveQueue flush.
 	self deny: p checkRawPrompt.
-	p receiveQueue received: MPyProxy rawPrompt.
+	p receiveQueue received: MPyProxy rawNextPrompt.
 	self assert: p checkRawPrompt
 ]
 

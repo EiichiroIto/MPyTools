@@ -50,7 +50,6 @@ NativeSerialTest >> testOptionsNamed [
 	| c |
 	c := self newComm.
 	self assert: (c optionsNamed: #portName) isArray.
-	self assert: (c optionsNamed: #portName) notEmpty.
 	self assert: (c optionsNamed: #baudRate) isArray.
 	self assert: (c optionsNamed: #baudRate) notEmpty.
 	self assert: (c optionsNamed: #none) isArray.

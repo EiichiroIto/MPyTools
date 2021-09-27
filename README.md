@@ -32,7 +32,7 @@ MPyTool new
 MicroPythonCoder generates MicroPython code from Smalltalk-like MicroPython code.
 For example,
 
-```
+```Smalltalk
 printTest
   self isFunction: true.
 	self print: 'Hello, World!'

@@ -13,6 +13,31 @@ MicroPythonSample class >> example1 [
 ]
 
 { #category : #samples }
+MicroPythonSample >> cascadingIfTest1 [
+	a := 1.
+	a = 1
+		ifTrue: [ self print: 1 ]
+		ifFalse: [ a = 2
+				ifTrue: [ self print: 2 ]
+				ifFalse: [ a = 3
+						ifTrue: [ self print: 3 ]
+						ifFalse: [ self print: 4 ] ] ]
+]
+
+{ #category : #samples }
+MicroPythonSample >> cascadingIfTest2 [
+	a := 1.
+	a = 1
+		ifTrue: [ self print: 1 ]
+		ifFalse: [ a = 2
+				ifTrue: [ self print: 2 ]
+				ifFalse: [ a = 3
+						ifTrue: [ self print: 3 ]
+						ifFalse: [ self print: 4 ].
+					self print: 5 ] ]
+]
+
+{ #category : #samples }
 MicroPythonSample >> conditionalIf [
 	self isFunction: true.
 	^ a == 2 ifTrue: [ 3 ] ifFalse: [ 4 ]

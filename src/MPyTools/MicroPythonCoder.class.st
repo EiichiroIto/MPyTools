@@ -517,6 +517,7 @@ MicroPythonCoder >> generateGreaterThanOrEqual: aNode on: aStream indent: anInte
 
 { #category : #translation }
 MicroPythonCoder >> generateIf: aNode then: aNode2 else: aNode3 on: aStream indent: anInteger [
+	| n |
 	aStream nextPutAll: 'if '.
 	aNode emitCode: self on: aStream indent: anInteger.
 	aStream
@@ -525,10 +526,22 @@ MicroPythonCoder >> generateIf: aNode then: aNode2 else: aNode3 on: aStream inde
 	aNode2 emitCode: self on: aStream indent: anInteger + 1.
 	aStream cr.
 	self emitIndentLevel: anInteger on: aStream.
+	n := aNode3.
+	[ n isCascadingIf ]
+		whileTrue: [ n := n statements first.
+			aStream nextPutAll: 'elif '.
+			n receiver emitCode: self on: aStream indent: anInteger.
+			aStream
+				nextPut: $:;
+				cr.
+			n arguments first emitCode: self on: aStream indent: anInteger + 1.
+			aStream cr.
+			self emitIndentLevel: anInteger on: aStream.
+			n := n arguments second ].
 	aStream
 		nextPutAll: 'else:';
 		cr.
-	aNode3 emitCode: self on: aStream indent: anInteger + 1
+	n emitCode: self on: aStream indent: anInteger + 1
 ]
 
 { #category : #translation }

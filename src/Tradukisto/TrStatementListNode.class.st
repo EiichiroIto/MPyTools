@@ -52,6 +52,17 @@ TrStatementListNode >> inlineMethodsUsing: aDictionary [
 ]
 
 { #category : #testing }
+TrStatementListNode >> isCascadingIf [
+	| s |
+	statements size = 1
+		ifFalse: [ ^ false ].
+	s := statements first.
+	s isSend
+		ifFalse: [ ^ false ].
+	^ s selector = #ifTrue:ifFalse:
+]
+
+{ #category : #testing }
 TrStatementListNode >> isStatementList [
 	^ true
 ]

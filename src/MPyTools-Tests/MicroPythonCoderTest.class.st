@@ -78,6 +78,21 @@ MicroPythonCoderTest >> testEmitArrayOnIndent [
 ]
 
 { #category : #test }
+MicroPythonCoderTest >> testEmitFunctionHeaderOnIndent [
+	| c s m |
+	s := WriteStream on: String new.
+	c := self newCoder.
+	m := MicroPythonMethod new
+		selector: #test;
+		arguments: #(a b);
+		yourself.
+	c emitFunctionHeader: m on: s indent: 1.
+	self
+		assert: s contents
+		equals: String cr , String tab , 'def test(a,b):' , String cr
+]
+
+{ #category : #test }
 MicroPythonCoderTest >> testFunctionNameFor [
 	| c |
 	c := self newCoder.
@@ -1371,6 +1386,17 @@ MicroPythonCoderTest >> testMethodClass [
 	| c |
 	c := self newCoder.
 	self assert: c methodClass identicalTo: MicroPythonMethod
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testPrivAddClass [
+	| c x y |
+	c := self newCoder.
+	x := c privAddClass: MicroPythonSample.
+	self assert: x name equals: #MicroPythonSample.
+	self assert: (x variables includes: #a).
+	y := c privAddClass: MicroPythonSample.
+	self assert: x identicalTo: y
 ]
 
 { #category : #test }

@@ -35,7 +35,7 @@ For example,
 ```Smalltalk
 printTest
   self isFunction: true.
-	self print: 'Hello, World!'
+  self print: 'Hello, World!'
 ```
 
 It is converted into the following code.

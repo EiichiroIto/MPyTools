@@ -45,4 +45,4 @@ def print_test():
   print("Hello, World!")
 ```
 
-
+There are several types of devices using MicroPython. Currently MicroPythonCoder supports only ESP8266/ESP32 and micro:bit devices. See samples.

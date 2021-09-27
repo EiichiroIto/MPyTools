@@ -10,9 +10,13 @@ BaselineOfMPyTools >> baseline: spec [
 	spec
 		for: #common
 		do: [ spec
+				package: 'Tradukisto';
+				package: 'Tradukisto-Tests'
+					with: [ spec requires: #('Tradukisto') ];
 				package: 'MPyTools';
+					with: [ spec requires: #('Tradukisto') ];
 				package: 'MPyTools-Tests'
-					with: [ spec requires: #('Tradukisto' 'Tradukisto-Tests') ] ]
+					with: [ spec requires: #('MPyTools-Tests') ] ]
 ]
 
 { #category : #accessing }

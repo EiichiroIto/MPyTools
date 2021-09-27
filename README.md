@@ -10,7 +10,7 @@ MPyTool communicates with MicroPython devices through a serial port. It sends Mi
 
 Like this,
 
-```
+```Smalltalk
 |mp|
 mp := MPyTool new.
 mp useSerial.
@@ -21,7 +21,7 @@ mp waitUntilPrompt.
 mp close.
 ```
 
-```
+```Smalltalk
 MPyTool new
   useSerial;
   upload: 'print("Hello")' fileNamed: 'main.py';
@@ -40,7 +40,7 @@ printTest
 
 It is converted into the following code.
 
-```
+```Python
 def print_test():
   print("Hello, World!")
 ```

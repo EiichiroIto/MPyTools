@@ -6,6 +6,7 @@ Class {
 
 { #category : #baselines }
 BaselineOfMPyTools >> baseline: spec [
+	<baseline>
 	spec
 		for: #common
 		do: [ spec

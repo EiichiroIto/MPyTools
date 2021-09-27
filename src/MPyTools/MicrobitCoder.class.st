@@ -21,6 +21,16 @@ MicrobitCoder >> generateGetPixelXY: aNode on: aStream indent: anInteger [
 ]
 
 { #category : #translation }
+MicrobitCoder >> generateReadFrom: aNode on: aStream indent: anInteger [
+	self emitExpression: aNode receiver on: aStream.
+	aStream nextPutAll: '.read('.
+	self emitExpression: aNode arguments second on: aStream.
+	aStream nextPut: $,.
+	self emitExpression: aNode arguments first on: aStream.
+	aStream nextPut: $)
+]
+
+{ #category : #translation }
 MicrobitCoder >> generateSetPixelXYTo: aNode on: aStream indent: anInteger [
 	self generateFunction: 'set_pixel' node: aNode on: aStream indent: anInteger
 ]
@@ -42,6 +52,7 @@ MicrobitCoder >> translationPair [
 			#(
 		#getPixelX:y: #generateGetPixelXY:on:indent:
 		#setPixelX:y:to: #generateSetPixelXYTo:on:indent:
-		#write:to: #generateWriteTo:on:indent: 
+		#write:to: #generateWriteTo:on:indent:
+		#read:from: #generateReadFrom:on:indent:
 			)
 ]

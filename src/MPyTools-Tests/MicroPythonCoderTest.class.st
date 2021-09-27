@@ -90,6 +90,23 @@ MicroPythonCoderTest >> testFunctionNameFor [
 ]
 
 { #category : #test }
+MicroPythonCoderTest >> testGenerateAbsOnIndent [
+	| c s n1 n2 |
+	c := self newCoder.
+	n1 := TrConstantNode new value: -5.
+	n2 := TrSendNode new receiver: n1.
+	s := WriteStream on: String new.
+	c generateAbs: n2 on: s indent: 0.
+	self assert: s contents equals: 'abs(-5)'.
+	c := self newCoder.
+	n1 := TrVariableNode new name: 'x'.
+	n2 := TrSendNode new receiver: n1.
+	s := WriteStream on: String new.
+	c generateAbs: n2 on: s indent: 0.
+	self assert: s contents equals: 'abs(x)'
+]
+
+{ #category : #test }
 MicroPythonCoderTest >> testGenerateAndOnIndent [
 	| c n1 n2 n3 s |
 	s := WriteStream on: String new.
@@ -99,6 +116,31 @@ MicroPythonCoderTest >> testGenerateAndOnIndent [
 	c := self newCoder.
 	c generateAnd: n3 on: s indent: 0.
 	self assert: s contents equals: 'True and False'
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testGenerateAsByteArrayOnIndent [
+	| c s n1 n2 |
+	c := self newCoder.
+	n1 := TrArrayNode new
+		contents: (#(1 2 3) collect: [ :each | TrConstantNode new value: each ]);
+		isByteArray: false.
+	n2 := TrSendNode new receiver: n1.
+	s := WriteStream on: String new.
+	c generateAsByteArray: n2 on: s indent: 0.
+	self assert: s contents equals: 'bytes((1,2,3))'.
+	n1 := TrArrayNode new
+		contents: (#(1 2 3) collect: [ :each | TrConstantNode new value: each ]);
+		isByteArray: true.
+	n2 := TrSendNode new receiver: n1.
+	s := WriteStream on: String new.
+	c generateAsByteArray: n2 on: s indent: 0.
+	self assert: s contents equals: 'bytes([1,2,3])'.
+	n1 := TrVariableNode new name: 'a'.
+	n2 := TrSendNode new receiver: n1.
+	s := WriteStream on: String new.
+	c generateAsByteArray: n2 on: s indent: 0.
+	self assert: s contents equals: 'bytes(a)'
 ]
 
 { #category : #test }
@@ -398,6 +440,21 @@ MicroPythonCoderTest >> testGenerateFourthOnIndent [
 	c := self newCoder.
 	c generateFourth: n2 on: s indent: 0.
 	self assert: s contents equals: 'x[3]'
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testGenerateFromImportOnIndent [
+	| c n1 n2 n3 n4 s |
+	s := WriteStream on: String new.
+	n1 := TrVariableNode new name: 'self'.
+	n2 := TrConstantNode new value: #test.
+	n3 := TrVariableNode new name: 'Object'.
+	n4 := TrSendNode new
+		receiver: n1;
+		arguments: {n2. n3}.
+	c := self newCoder.
+	c generateFromImport: n4 on: s indent: 0.
+	self assert: s contents equals: 'from test import Object'
 ]
 
 { #category : #test }
@@ -1263,6 +1320,36 @@ MicroPythonCoderTest >> testInitialize [
 	| c |
 	c := self newCoder.
 	self assert: c classes isCollection
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testIsExternalSend [
+	| c n1 n2 r |
+	c := self newCoder.
+	n1 := TrVariableNode new name: #Object.
+	n2 := TrSendNode new
+		receiver: n1;
+		selector: #new.
+	r := c isExternalSend: n2.
+	self assert: r.
+	n1 := TrVariableNode new name: #Object.
+	n2 := TrSendNode new
+		receiver: n1;
+		selector: #basicNew.
+	r := c isExternalSend: n2.
+	self assert: r
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testIsInternalInitializer [
+	| c n1 n2 r |
+	c := self newCoder.
+	c targetClass: ESP8266Sample.
+	n1 := TrVariableNode new name: 'NeoPixel'.
+	n2 := TrSendNode new
+		receiver: n1;
+		selector: #init.
+	r := c isInternalInitializer: n2
 ]
 
 { #category : #test }

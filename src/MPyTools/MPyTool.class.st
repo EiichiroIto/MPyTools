@@ -237,6 +237,14 @@ MPyTool >> useWebRepl [
 	self shouldBeImplemented
 ]
 
+{ #category : #api }
+MPyTool >> waitUntilPrompt [
+	[ proxy checkPrompt ]
+		whileFalse: [ proxy step.
+			100 milliSeconds wait ].
+	^ self responseString
+]
+
 { #category : #private }
 MPyTool >> writeQuotedString: aString on: aStream [
 	aString

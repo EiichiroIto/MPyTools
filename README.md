@@ -48,3 +48,10 @@ def print_test():
 ```
 
 There are several types of devices using MicroPython. Currently MicroPythonCoder supports only ESP8266/ESP32 and micro:bit devices. See samples.
+
+## Usage
+To get MicroPython code of a class, just evaluate it.
+
+```smalltalk
+ESP8266Sample asMicroPython
+```

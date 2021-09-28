@@ -31,7 +31,7 @@ Its subclasses may be for M5Stack series devices.
 This class is for BBC micro:bit device.
 
 # Class side methods
-Base class has class side methods. Most important methods are #coderClass and #recordModuleNamed:into:.
+Base class has class side methods. Most important methods are #coderClass #recordModuleNamed:into:.
 
 ## coderClass method
 #coderClass method should return the MicroPythonCoder class or its subclass. Coder class generates MicroPython codes, and base class specifies corresponding coder class for generating suitable code for that class.
@@ -50,3 +50,15 @@ recordModuleNamed: aString into: aModules
     ifTrue: [ ^ aModules from: 'neopixel' import: aString ].
   super recordModuleNamed: aString into: aModules
 ```
+
+## filename method
+#filename method is the filename string which should be saved when MPyTool>>#uploadClass: uploads this class. The defauls is 'main.py'.
+
+```smalltalk
+MPyTool new
+  useSerial;
+  uploadClass: M5AtomLite;
+  close.
+```
+
+Above code will store M5AtomLite class as 'main.py' file.

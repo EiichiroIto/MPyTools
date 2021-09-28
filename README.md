@@ -3,14 +3,14 @@ MicroPython tools for Pharo Smalltalk
 
 [![Build Status](https://app.travis-ci.com/EiichiroIto/MPyTools.svg?branch=master)](https://app.travis-ci.com/EiichiroIto/MPyTools)
 
-MPyTools has two functionalities, which communicates with MicroPython devices, and which generates MicroPython codes.
+MPyTools has two functionalities, which communicates with MicroPython devices, and which generates MicroPython codes from Smalltalk codes.
 
 This project is inspired from MicroSqueak and rewrited some codes in Pharo Smalltalk. (https://web.media.mit.edu/~jmaloney/microsqueak/)
 
 # MPyTool
 MPyTool communicates with MicroPython devices through a serial port. It sends MicroPython expression and receive its response, also it supports for uploading and downloading files.
 
-Like this,
+## Usage
 
 ```Smalltalk
 |mp|
@@ -50,7 +50,7 @@ def print_test():
 There are several types of devices using MicroPython. Currently MicroPythonCoder supports only ESP8266/ESP32 and micro:bit devices. See samples.
 
 ## Usage
-To get MicroPython code of a class, just evaluate it.
+To get MicroPython code string of a class, just evaluate it.
 
 ```smalltalk
 ESP8266Sample asMicroPython

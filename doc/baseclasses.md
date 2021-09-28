@@ -1,7 +1,7 @@
 Base class is an abstract class to make your own application.
 
 Each base class defines instance and class variables and methods.
-Instance and class variables represents module name and Class name in MicroPython respectively.
+Instance and class variables represents module name and Class name of MicroPython respectively.
 (ex. 'machine' instance variable defines machine module in MicroPython)
 Method of base class is just a dummy and its body is empty. It is to suppress error indications in System Browser.
 

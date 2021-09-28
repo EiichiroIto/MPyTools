@@ -55,3 +55,12 @@ To get MicroPython code string of a class, just evaluate it.
 ```smalltalk
 ESP8266Sample asMicroPython
 ```
+
+To execute whole the class in a device.
+
+```smalltalk
+MPyTool new
+  useSerial;
+  execute: ESP8266Sample asMicroPython;
+  close.
+```

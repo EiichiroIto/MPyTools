@@ -5,6 +5,8 @@ MicroPython tools for Pharo Smalltalk
 
 MPyTools has two functionalities, which communicates with MicroPython devices, and which generates MicroPython codes.
 
+This project is inspired from MicroSqueak and rewrited some codes in Pharo Smalltalk. (https://web.media.mit.edu/~jmaloney/microsqueak/)
+
 # MPyTool
 MPyTool communicates with MicroPython devices through a serial port. It sends MicroPython expression and receive its response, also it supports for uploading and downloading files.
 

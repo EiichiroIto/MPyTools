@@ -16,8 +16,8 @@ MPyTool communicates with MicroPython devices through a serial port. It sends Mi
 |mp|
 mp := MPyTool new.
 mp useSerial.
-mp execute: 'import time'.
-mp execute: 'time.sleep(5)'.
+mp execute: 'import time
+time.sleep(5)'.
 mp waitUntilPrompt.
 (mp evaluate: '1+2') inspect.
 mp close.

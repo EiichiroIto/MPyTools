@@ -5,6 +5,12 @@ Instance and class variables represents module name and Class name in MicroPytho
 (ex. 'machine' instance variable defines machine module in MicroPython)
 Method of base class is just a dummy and its body is empty. It is to suppress error indications in System Browser.
 
+You may create an appropriate subclass for your application. For example,
+
+```
+
+```
+
 # MicroPythonBase
 This class is for general MicroPython code commonly used in various application.
 Currently it defines only 're' module.

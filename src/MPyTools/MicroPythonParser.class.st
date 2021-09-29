@@ -55,9 +55,12 @@ MicroPythonParser >> parseNumber [
 									w contents isEmpty
 										ifTrue: [ w nextPut: $0 ].
 									w nextPut: c ].
+							c = $e
+								ifTrue: [ mode := #exp.
+									w nextPut: c ].
 							c isDigit
 								ifTrue: [ w nextPut: c ].
-							('-.0123456789' includes: c)
+							('-.e0123456789' includes: c)
 								ifFalse: [ stream back.
 									exitBlock value ] ]).
 					([ #minus ]
@@ -66,21 +69,40 @@ MicroPythonParser >> parseNumber [
 									w contents size < 2
 										ifTrue: [ w nextPut: $0 ].
 									w nextPut: c ].
+							c = $e
+								ifTrue: [ mode := #exp.
+									w nextPut: c ].
 							c isDigit
 								ifTrue: [ w nextPut: c ].
-							('.0123456789' includes: c)
+							('.e0123456789' includes: c)
 								ifFalse: [ stream back.
 									exitBlock value ] ]).
 					([ #float ]
 						-> [ c isDigit
 								ifTrue: [ w nextPut: c ].
-							c = 'e'
+							c = $e
 								ifTrue: [ mode := #exp.
 									w nextPut: c ].
 							('e0123456789' includes: c)
 								ifFalse: [ stream back.
 									exitBlock value ] ]).
-					([ #exp ] -> [ self shouldBeImplemented ])} ].
+					([ #exp ]
+						-> [ c = $-
+								ifTrue: [ mode := #exp2.
+									w nextPut: c ].
+							c = $+
+								ifTrue: [ mode := #exp2 ].
+							c isDigit
+								ifTrue: [ mode := #exp2.
+									w nextPut: c ].
+							('+-0123456789' includes: c)
+								ifFalse: [ stream back.
+									exitBlock value ] ]).
+					([ #exp2 ]
+						-> [ c isDigit
+								ifTrue: [ w nextPut: c ]
+								ifFalse: [ stream back.
+									exitBlock value ] ])} ].
 	exitBlock value
 ]
 

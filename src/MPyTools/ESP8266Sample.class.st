@@ -28,11 +28,17 @@ ESP8266Sample class >> initialize [
 
 { #category : #samples }
 ESP8266Sample >> connectWifi [
+	self connectWifi: ESSID password: PASSWORD
+]
+
+{ #category : #samples }
+ESP8266Sample >> connectWifi: aString password: aString2 [
 	| wlan |
+	self isFunction: true.
 	wlan := WLAN initWifi: #STA_IF.
 	wlan active: true.
 	wlan isConnected
-		ifFalse: [ wlan connect: ESSID password: PASSWORD.
+		ifFalse: [ wlan connect: aString password: aString2.
 			[ wlan isConnected ] whileFalse: [ time sleepMs: 100 ] ].
 	self print: wlan ifconfig
 ]

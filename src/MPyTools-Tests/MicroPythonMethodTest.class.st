@@ -20,6 +20,26 @@ MicroPythonMethodTest >> newMethod: aCompiledMethod [
 		yourself
 ]
 
+{ #category : #private }
+MicroPythonMethodTest >> newMethod: aCompiledMethod ofClass: aClass [
+	^ (self newMethod: aClass >> aCompiledMethod)
+		trClass: (MicroPythonClass new setupFrom: aClass);
+		yourself
+]
+
+{ #category : #test }
+MicroPythonMethodTest >> testBuildRenameVariableTableReserved [
+	| m r |
+	m := self newMethod: #connectWifi:password: ofClass: ESP8266Sample.
+	r := m buildRenameVariableTableReserved: #(_thread esp machine ntptime os random re self socket super time value wdt).
+	self assert: r isDictionary.
+	self assert: r size equals: 3.
+	self
+		assertCollection: r keys asArray sorted
+		equals: #(aString aString2 wlan).
+	self assertCollection: r values asArray sorted equals: #(a b c)
+]
+
 { #category : #test }
 MicroPythonMethodTest >> testInitialize [
 	| p |
@@ -60,11 +80,6 @@ MicroPythonMethodTest >> testIsTopLevel [
 	self assert: p isTopLevel.
 	p isTopLevel: false.
 	self deny: p isTopLevel
-]
-
-{ #category : #test }
-MicroPythonMethodTest >> testRenameVariablesUsing [
-	self newMethod renameVariablesUsing: self
 ]
 
 { #category : #test }

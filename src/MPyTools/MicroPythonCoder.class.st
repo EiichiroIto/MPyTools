@@ -72,11 +72,6 @@ MicroPythonCoder >> codeStringFromCompiledMethod: aCompiledMethod [
 	^ self codeString
 ]
 
-{ #category : #api }
-MicroPythonCoder >> doInliningClass: aTrClass [ 
-	"self shouldBeImplemented."
-]
-
 { #category : #'code generation' }
 MicroPythonCoder >> emitArray: aNode on: aStream indent: anInteger [
 	aNode isByteArray
@@ -104,7 +99,7 @@ MicroPythonCoder >> emitClass: aTrClass on: aStream [
 	aTrClass prepareMethods: self.
 	doAssertions
 		ifFalse: [ aTrClass removeAssertions ].
-	self doInliningClass: aTrClass.
+	aTrClass renameVariableToShorterName.
 	self emitImports: aTrClass allVariables on: aStream.
 	self emitFunctions: aTrClass on: aStream indent: 0.
 	(aTrClass methodsOf: #isMethod) notEmpty

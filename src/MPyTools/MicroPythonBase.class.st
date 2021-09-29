@@ -49,6 +49,11 @@ MicroPythonBase class >> example [
 	t close
 ]
 
+{ #category : #accessing }
+MicroPythonBase class >> filename [
+	^ 'main.py'
+]
+
 { #category : #testing }
 MicroPythonBase class >> isBase [
 	^ self name endsWith: 'Base'

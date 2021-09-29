@@ -62,7 +62,18 @@ MicroPythonParserTest >> testParseNumber [
 	p := self newParser.
 	p stream: s.
 	self assert: p parseNumber equals: -0.7.
-
+	s := ReadStream on: '1e3'.
+	p := self newParser.
+	p stream: s.
+	self assert: p parseNumber equals: 1000.
+	s := ReadStream on: '3e+2'.
+	p := self newParser.
+	p stream: s.
+	self assert: p parseNumber equals: 300.
+	s := ReadStream on: '5e-2'.
+	p := self newParser.
+	p stream: s.
+	self assert: p parseNumber equals: 0.05
 ]
 
 { #category : #test }

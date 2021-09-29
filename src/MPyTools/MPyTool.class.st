@@ -3,15 +3,29 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'proxy',
-		'showProgress'
+		'showProgress',
+		'closeConnection'
 	],
 	#category : #'MPyTools-Core'
 }
 
 { #category : #private }
+MPyTool >> autoClose [
+	closeConnection ifTrue: [ self close ]
+]
+
+{ #category : #private }
 MPyTool >> autoOpen [
-	(proxy isConnected or: [ proxy open ])
-		ifFalse: [ self error ].
+	| pw |
+	proxy isConnected
+		ifFalse: [ proxy open
+				ifFalse: [ self error ].
+			proxy comm isWebRepl
+				ifTrue: [ proxy enterWebRepl.
+					pw := UIManager default request: 'Enter password'.
+					pw ifNil: [ ^ self close ].
+					proxy put: pw asByteArray , #[13].
+					self waitUntilPrompt ] ].
 	^ proxy break
 ]
 
@@ -37,9 +51,28 @@ MPyTool >> close [
 	proxy close
 ]
 
+{ #category : #accessing }
+MPyTool >> closeConnection [
+	^ closeConnection
+]
+
+{ #category : #accessing }
+MPyTool >> closeConnection: anObject [
+	closeConnection := anObject
+]
+
 { #category : #private }
 MPyTool >> defaultBaudRate [
 	^ 115200
+]
+
+{ #category : #private }
+MPyTool >> disableCloseDo: aBlock [
+	| tmp |
+	tmp := closeConnection.
+	closeConnection := false.
+	aBlock value.
+	closeConnection := tmp
 ]
 
 { #category : #api }
@@ -77,6 +110,7 @@ MPyTool >> evaluate: aString [
 				during:
 					[ :bar | ret := proxy paste: aString during: [ :x | bar value: x ] ] ]
 		ifFalse: [ ret := proxy paste: aString ].
+	self autoClose.
 	^ ret
 ]
 
@@ -92,7 +126,8 @@ MPyTool >> execute: aString [
 				to: 100
 				during:
 					[ :bar | proxy nonBlock: aString during: [ :x | bar value: x ] ] ]
-		ifFalse: [ proxy nonBlock: aString ]
+		ifFalse: [ proxy nonBlock: aString ].
+	self autoClose
 ]
 
 { #category : #api }
@@ -100,13 +135,15 @@ MPyTool >> fileNames [
 	| ret |
 	self autoOpen.
 	ret := proxy paste: 'import os' , String cr , 'os.listdir()'.
+	self autoClose.
 	^ MicroPythonParser new parseData: ret
 ]
 
 { #category : #initialization }
 MPyTool >> initialize [
 	proxy := MPyProxy new.
-	showProgress := false
+	showProgress := false.
+	closeConnection := true
 ]
 
 { #category : #testing }
@@ -141,6 +178,7 @@ MPyTool >> raw: aString [
 				during:
 					[ :bar | ret := proxy raw: aString during: [ :x | bar value: x ] ] ]
 		ifFalse: [ ret := proxy raw: aString ].
+	self autoClose.
 	^ ret
 ]
 
@@ -155,12 +193,14 @@ MPyTool >> rawString [
 { #category : #api }
 MPyTool >> reboot [
 	self autoOpen.
-	^ proxy reboot
+	proxy reboot.
+	self autoClose
 ]
 
 { #category : #api }
 MPyTool >> removeAll [
-	self fileNames do: [ :each | self removeFileNamed: each ]
+	self
+		disableCloseDo: [ self fileNames do: [ :each | self removeFileNamed: each ] ]
 ]
 
 { #category : #api }
@@ -234,7 +274,15 @@ MPyTool >> useSerial [
 
 { #category : #api }
 MPyTool >> useWebRepl [
-	self shouldBeImplemented
+	| c list addr |
+	c := WebRepl new.
+	list := c optionsNamed: #addresses.
+	addr := UIManager default chooseOrRequestFrom: list title: 'choose or enter IP address'.
+	addr ifNil: [ ^ self ].
+	c address: addr.
+	proxy close.
+	proxy comm: c.
+	closeConnection := false
 ]
 
 { #category : #api }

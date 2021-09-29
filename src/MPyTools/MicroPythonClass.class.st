@@ -18,3 +18,13 @@ MicroPythonClass >> addVariablesOf: aClass [
 								put: (TrConstantNode new value: assoc value) ] ].
 			cl := cl superclass ]
 ]
+
+{ #category : #api }
+MicroPythonClass >> renameVariableToShorterName [
+	| reserved dict |
+	reserved := #(self super) , originalClass allInstVarNames.
+	methods
+		do: [ :each | 
+			dict := each buildRenameVariableTableReserved: reserved.
+			each renameVariablesUsing: dict ]
+]

@@ -58,6 +58,11 @@ NativeSerial >> isConnected [
 	^ port notNil
 ]
 
+{ #category : #testing }
+NativeSerial >> isWebRepl [
+	^ false
+]
+
 { #category : #api }
 NativeSerial >> open [
 	self isConnected

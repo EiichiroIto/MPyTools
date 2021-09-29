@@ -106,6 +106,22 @@ MPyProxy class >> rebootRequest [
 	^ #[4]
 ]
 
+{ #category : #'as yet unclassified' }
+MPyProxy class >> webReplPasswordRequest [
+	^ 'Password: ' asByteArray
+]
+
+{ #category : #constants }
+MPyProxy class >> webReplRequestHeader [
+	^ ('GET / HTTP/1.1
+Host: echo.websocket.org
+Connection: Upgrade
+Upgrade: websocket
+Sec-WebSocket-Key: foo
+
+' copyReplaceAll: String cr with: String crlf) asByteArray
+]
+
 { #category : #utilities }
 MPyProxy >> asString: aCollection [
 	| s |
@@ -155,6 +171,15 @@ MPyProxy >> checkEnterRawMode [
 	msg last = self class rawPrompt
 		ifFalse: [ ^ false ].
 	^ true
+]
+
+{ #category : #testing }
+MPyProxy >> checkEnterWebRepl [
+	| msg |
+	msg := receiveQueue allReceived.
+	msg isEmpty
+		ifTrue: [ ^ false ].
+	^ msg last = self class webReplPasswordRequest
 ]
 
 { #category : #testing }
@@ -254,6 +279,13 @@ MPyProxy >> enterRawMode [
 	self
 		send: self class rawRequest
 		thenWaitUntil: [ self checkEnterRawMode ]
+]
+
+{ #category : #private }
+MPyProxy >> enterWebRepl [
+	self
+		send: self class webReplRequestHeader
+		thenWaitUntil: [ self checkEnterWebRepl ]
 ]
 
 { #category : #private }

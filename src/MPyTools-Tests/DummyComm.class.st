@@ -51,6 +51,11 @@ DummyComm >> isConnected: anObject [
 	isConnected := anObject
 ]
 
+{ #category : #testing }
+DummyComm >> isWebRepl [
+	^ false
+]
+
 { #category : #api }
 DummyComm >> open [
 	isConnected := true.

@@ -7,6 +7,25 @@ Class {
 	#category : #'MPyTools-MicroPython'
 }
 
+{ #category : #private }
+MicroPythonMethod >> buildRenameVariableTableReserved: aCollection [
+	| set reserved gen v |
+	set := Set new.
+	self allVariablesInto: set.
+	set := set reject: [ :each | each first isUppercase ].
+	set removeAllFoundIn: aCollection.
+	reserved := aCollection asOrderedCollection.
+	reserved addAll: (set select: [ :each | each size = 1 ]).
+	set := set reject: [ :each | each size = 1 ].
+	gen := IdentifierGenerator new.
+	^ (set asArray sorted
+		collect: [ :each | 
+			[ v := gen next.
+			reserved includes: v ] whileTrue.
+			reserved add: v.
+			each -> v ]) asDictionary
+]
+
 { #category : #initialization }
 MicroPythonMethod >> initialize [
 	super initialize.
@@ -40,11 +59,6 @@ MicroPythonMethod >> isTopLevel: anObject [
 	type := anObject
 		ifTrue: [ #topLevel ]
 		ifFalse: [ #method ]
-]
-
-{ #category : #api }
-MicroPythonMethod >> renameVariablesUsing: aDictionary [
-	"do nothing"
 ]
 
 { #category : #api }

@@ -22,11 +22,6 @@ Class {
 	#category : #'MPyTools-Samples'
 }
 
-{ #category : #accessing }
-MicrobitLineTracer class >> filename [
-	^ 'main.py'
-]
-
 { #category : #initialization }
 MicrobitLineTracer >> initialize [
 	self from: #maqueen import: MicroMaqueen.

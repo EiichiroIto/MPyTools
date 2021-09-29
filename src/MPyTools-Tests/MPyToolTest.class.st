@@ -13,6 +13,23 @@ MPyToolTest >> newTool [
 ]
 
 { #category : #test }
+MPyToolTest >> testAutoClose [
+	| t c |
+	t := self newTool.
+	c := DummyComm new.
+	t proxy comm: c.
+	self deny: c isConnected.
+	c isConnected: true.
+	self assert: c isConnected.
+	t autoClose.
+	self deny: c isConnected.
+	t closeConnection: false.
+	c isConnected: true.
+	t autoClose.
+	self assert: c isConnected
+]
+
+{ #category : #test }
 MPyToolTest >> testAutoOpen [
 	| t c ret |
 	t := self newTool.
@@ -39,11 +56,35 @@ MPyToolTest >> testClose [
 ]
 
 { #category : #test }
+MPyToolTest >> testCloseConnection [
+	| t |
+	t := self newTool.
+	self assert: t closeConnection.
+	t closeConnection: false.
+	self deny: t closeConnection
+]
+
+{ #category : #test }
 MPyToolTest >> testDefaultBaudRate [
 	| t |
 	t := self newTool.
 	self assert: t defaultBaudRate isInteger.
 	self assert: t defaultBaudRate > 0
+]
+
+{ #category : #test }
+MPyToolTest >> testDisableCloseDo [
+	| t c |
+	t := self newTool.
+	c := DummyComm new.
+	t proxy comm: c.
+	c isConnected: true.
+	t closeConnection: true.
+	t autoClose.
+	self deny: c isConnected.
+	c isConnected: true.
+	t disableCloseDo: [ t autoClose ].
+	self assert: c isConnected
 ]
 
 { #category : #test }

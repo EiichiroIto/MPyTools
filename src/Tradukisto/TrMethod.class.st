@@ -141,25 +141,6 @@ TrMethod >> buildCaseStatement: aSendNode [
 		selectors: aSendNode arguments last value
 ]
 
-{ #category : #private }
-TrMethod >> checkForCompleteness: stmtLists in: aCodeGen [
-	"Set the complete flag if none of the given statement list nodes contains further candidates for inlining."
-
-	complete := true.
-	stmtLists
-		do: [ :stmtList | 
-			stmtList statements
-				do: [ :node | 
-					(self inlineableSend: node in: aCodeGen)
-						ifTrue: [ complete := false.	"more inlining to do"
-							^ self ] ] ].
-	body
-		nodesDo: [ :n | 
-			(self inlineableFunctionCall: n in: aCodeGen)
-				ifTrue: [ complete := false.	"more inlining to do"
-					^ self ] ]
-]
-
 { #category : #accessing }
 TrMethod >> complete [
 	^ complete
@@ -168,18 +149,6 @@ TrMethod >> complete [
 { #category : #accessing }
 TrMethod >> complete: anObject [
 	complete := anObject
-]
-
-{ #category : #private }
-TrMethod >> computePossibleSideEffects [
-	"Answer true if this method may have side effects. It has side effects if it assigns to a global variable. It may have side effects if it calls a non-built-in method."
-
-	body
-		nodesDo: [ :node | 
-			node isSend
-				ifTrue: [ node isBuiltinOperator
-						ifFalse: [ ^ true ] ] ].
-	^ false
 ]
 
 { #category : #copying }
@@ -261,90 +230,6 @@ TrMethod >> initialize [
 	complete := false
 ]
 
-{ #category : #private }
-TrMethod >> inlineCodeOrNilForStatement: aNode in: aCodeGen [
-	"If the given statement node can be inlined, answer the statements that replace it. Otherwise, answer nil."
-
-	| stmts |
-	aNode isReturn
-		ifTrue: [ (self inlineableSend: aNode expression in: aCodeGen)
-				ifTrue: [ stmts := self
-						inlineSend: aNode expression
-						directReturn: true
-						exitVar: nil
-						in: aCodeGen.
-					^ stmts ] ].
-	aNode isAssignment
-		ifTrue: [ (self inlineableSend: aNode expression in: aCodeGen)
-				ifTrue: [ ^ self
-						inlineSend: aNode expression
-						directReturn: false
-						exitVar: aNode variable name
-						in: aCodeGen ] ].
-	aNode isSend
-		ifTrue: [ (self inlineableSend: aNode in: aCodeGen)
-				ifTrue: [ ^ self
-						inlineSend: aNode
-						directReturn: false
-						exitVar: nil
-						in: aCodeGen ] ].
-	^ nil
-]
-
-{ #category : #private }
-TrMethod >> inlineFunctionCall: aSendNode in: aCoder [
-	"Answer the body of the called function, substituting the actual parameters for the formal argument variables in the method body."
-
-	"Assume caller has established that:
-		1. the method arguments are all substitutable nodes, and
-		2. the method to be inlined contains no additional embedded returns."
-
-	| sel meth substitutionDict |
-	sel := aSendNode selector.
-	meth := (trClass methodNamed: sel) copy.
-	meth renameVarsForInliningInto: self in: trClass.
-	meth renameLabelsForInliningInto: self.
-	self addVarsDeclarationsAndLabelsOf: meth.
-	substitutionDict := Dictionary new: 100.
-	meth arguments
-		with: aSendNode arguments
-		do: [ :argName :exprNode | 
-			substitutionDict at: argName asSymbol put: exprNode.
-			locals remove: argName ].
-	meth body bindVariablesIn: substitutionDict.
-	^ meth statements first expression
-]
-
-{ #category : #testing }
-TrMethod >> inlineableFunctionCall: aNode in: aCodeGen [
-	"Answer true if the given send node is a call to a 'functional' method--a method whose body is a single return statement of some expression and whose actual parameters can all be directly substituted."
-
-	| m |
-	aNode isSend
-		ifFalse: [ ^ false ].
-	m := trClass methodNamed: aNode selector.	"nil if builtin or external function"
-	(m notNil
-		and: [ m isFunctional and: [ aCodeGen mayInline: m selector ] ])
-		ifTrue: [ aNode arguments
-				do: [ :a | 
-					(self isSubstitutableNode: a intoMethod: m in: aCodeGen)
-						ifFalse: [ ^ false ] ].
-			^ true ]
-		ifFalse: [ ^ false ]
-]
-
-{ #category : #private }
-TrMethod >> inlineableSend: aNode in: aCodeGen [
-	"Answer true if the given send node is a call to a method that can be inlined."
-
-	| m |
-	aNode isSend
-		ifFalse: [ ^ false ].
-	m := trClass methodNamed: aNode selector.	"nil if builtin or external function"
-	^ m notNil
-		and: [ m complete and: [ aCodeGen mayInline: m selector ] ]
-]
-
 { #category : #testing }
 TrMethod >> isAssertion [
 	^ (selector beginsWith: 'assert')
@@ -364,40 +249,6 @@ TrMethod >> isFunctional [
 	^ true
 ]
 
-{ #category : #testing }
-TrMethod >> isSubstitutableNode: aNode intoMethod: targetMeth in: aCodeGen [
-	"Answer true if the given parameter node is either a constant, a local variable, or a formal parameter of the receiver. Such parameter nodes may be substituted directly into the body of the method during inlining. Note that global variables cannot be subsituted into methods with possible side effects (i.e., methods that may assign to global variables) because the inlined method might depend on having the value of the global variable captured when it is passed in as an argument."
-
-	| var |
-	aNode isConstant
-		ifTrue: [ ^ true ].
-	aNode isVariable
-		ifTrue: [ var := aNode name.
-			((locals includes: var) or: [ arguments includes: var ])
-				ifTrue: [ ^ true ].
-			(#(self true false nil) includes: var)
-				ifTrue: [ ^ true ].
-			(targetMeth maySubstituteGlobal: var)
-				ifTrue: [ ^ true ] ].
-
-	"scan expression tree; must contain only constants, builtin ops, and inlineable vars"
-	aNode
-		nodesDo: [ :node | 
-			node isSend
-				ifTrue: [ node isBuiltinOperator
-						ifFalse: [ ^ false ] ].
-			node isVariable
-				ifTrue: [ var := node name.
-					((locals includes: var)
-						or: [ (arguments includes: var)
-								or: [ (#(self true false nil) includes: var)
-										or: [ targetMeth maySubstituteGlobal: var ] ] ])
-						ifFalse: [ ^ false ] ].
-			(node isConstant or: [ node isVariable or: [ node isSend ] ])
-				ifFalse: [ ^ false ] ].
-	^ true
-]
-
 { #category : #accessing }
 TrMethod >> locals [
 	^ locals
@@ -406,26 +257,6 @@ TrMethod >> locals [
 { #category : #accessing }
 TrMethod >> locals: anObject [
 	locals := anObject
-]
-
-{ #category : #private }
-TrMethod >> maySubstituteGlobal: globalVar [
-	"Answer true if this method does or may have side effects on the given global variable."
-
-	possibleSideEffectsCache
-		ifNil:
-			[ "see if this calls any other method and record the result" possibleSideEffectsCache := self computePossibleSideEffects ].
-	possibleSideEffectsCache
-		ifTrue: [ ^ false ].
-	body
-		nodesDo: [ :node | 
-			node isAssignment
-				ifTrue: [ node variable name = globalVar
-						ifTrue: [ ^ false ] ] ].
-
-	"if we get here, receiver calls no other method
-	 and does not itself assign to the given global variable"
-	^ true
 ]
 
 { #category : #api }
@@ -540,42 +371,6 @@ TrMethod >> renameVariablesUsing: aDictionary [
 										ifFalse: [ arg ] ]) ] ]
 ]
 
-{ #category : #api }
-TrMethod >> renameVarsForCaseStmt [
-	"Rename the arguments and locals of this method with names like t1, t2, t3, etc. Return the number of variable names assigned. This is done to allow registers to be shared among the cases."
-
-	| i varMap |
-	i := 1.
-	varMap := Dictionary new: 100.
-	arguments , locals
-		do: [ :v | 
-			varMap at: v put: ('t' , i printString) asSymbol.
-			i := i + 1 ].
-	self renameVariablesUsing: varMap.
-	^ i - 1
-]
-
-{ #category : #api }
-TrMethod >> renameVarsForInliningInto: destMethod in: aClass [
-	"Rename any variables that would clash with those of the destination method."
-
-	| destVars usedVars varMap newVarName |
-	destVars := aClass globalsAsSet copy.
-	destVars addAll: destMethod locals.
-	destVars addAll: destMethod arguments.
-	usedVars := destVars copy.	"keeps track of names in use"
-	usedVars
-		addAll: arguments;
-		addAll: locals.
-	varMap := Dictionary new: 100.
-	arguments , locals
-		do: [ :v | 
-			(destVars includes: v)
-				ifTrue: [ newVarName := self class unusedNamePrefixedBy: v avoiding: usedVars.
-					varMap at: v put: newVarName ] ].
-	self renameVariablesUsing: varMap
-]
-
 { #category : #accessing }
 TrMethod >> selector [
 	^ selector
@@ -606,44 +401,6 @@ TrMethod >> statements [
 	(body arguments isNil or: [ body arguments isEmpty ])
 		ifFalse: [ self error: 'expected method parse tree to have no args' ].
 	^ body statements
-]
-
-{ #category : #private }
-TrMethod >> statementsListsForInlining [
-	"Answer a collection of statement list nodes that are candidates for inlining. Currently, we cannot inline into the argument blocks of and: and or: messages."
-
-	| stmtLists |
-	stmtLists := OrderedCollection new: 10.
-	body
-		nodesDo: [ :node | 
-			node isStatementList
-				ifTrue: [ stmtLists add: node ] ].
-	body
-		nodesDo: [ :node | 
-			node isSend
-				ifTrue: [ (node selector = #and: or: [ node selector = #or: ])
-						ifTrue:
-							[ "Note: the PP 2.3 compiler produces two arg nodes for these selectors"
-							stmtLists remove: node arguments first ifAbsent: [  ].
-							stmtLists remove: node arguments last ifAbsent: [  ] ].
-					(node selector = #ifTrue: or: [ node selector = #ifFalse: ])
-						ifTrue: [ stmtLists remove: node receiver ifAbsent: [  ] ].
-					(node selector = #ifTrue:ifFalse:
-						or: [ node selector = #ifFalse:ifTrue: ])
-						ifTrue: [ stmtLists remove: node receiver ifAbsent: [  ] ].
-					(node selector = #whileFalse: or: [ node selector = #whileTrue: ])
-						ifTrue: [ stmtLists remove: node receiver ifAbsent: [  ] ].
-					node selector = #'to:do'
-						ifTrue: [ stmtLists remove: node receiver ifAbsent: [  ].
-							stmtLists remove: node arguments first ifAbsent: [  ] ].
-					node selector = #'to:do'
-						ifTrue: [ stmtLists remove: node receiver ifAbsent: [  ].
-							stmtLists remove: node arguments first ifAbsent: [  ].
-							stmtLists remove: (node arguments at: 2) ifAbsent: [  ] ] ].
-			node isCaseStatement
-				ifTrue:
-					[ "don't inline cases" node cases do: [ :case | stmtLists remove: case ifAbsent: [  ] ] ] ].
-	^ stmtLists
 ]
 
 { #category : #accessing }

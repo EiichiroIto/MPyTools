@@ -13,14 +13,13 @@ MPyTool communicates with MicroPython devices through a serial port. It sends Mi
 ## Usage
 
 ```Smalltalk
-|mp|
+| mp |
 mp := MPyTool new.
 mp useSerial.
 mp execute: 'import time
-time.sleep(5)'.
+time.sleep(3)'.
 mp waitUntilPrompt.
 (mp evaluate: '1+2') inspect.
-mp close.
 ```
 
 ```Smalltalk
@@ -35,7 +34,7 @@ MicroPythonCoder generates MicroPython code from Smalltalk-like MicroPython code
 For example,
 
 ```Smalltalk
-printTest
+helloWorld
   self isFunction: true.
   self print: 'Hello, World!'
 ```
@@ -43,14 +42,14 @@ printTest
 It is converted into the following code.
 
 ```Python
-def print_test():
+def hello_world():
   print("Hello, World!")
 ```
 
 There are several types of devices using MicroPython. Currently MicroPythonCoder supports only ESP8266/ESP32 and micro:bit devices. See samples.
 
 ## Usage
-To get MicroPython code string of a class, just evaluate it.
+To get MicroPython code string of a class, send #asMicroPython message to the class.
 
 ```smalltalk
 ESP8266Sample asMicroPython

@@ -3,7 +3,7 @@ MicroPython tools for Pharo Smalltalk
 
 [![Build Status](https://app.travis-ci.com/EiichiroIto/MPyTools.svg?branch=master)](https://app.travis-ci.com/EiichiroIto/MPyTools)
 
-MPyTools has two functionalities, which communicates with MicroPython devices, and which generates MicroPython codes from Smalltalk codes.
+MPyTools has two functionalities, which communicates with MicroPython devices, and which generates MicroPython codes from Smalltalk-like MicroPython code.
 
 This project is inspired from MicroSqueak and rewrited some codes in Pharo Smalltalk. (https://web.media.mit.edu/~jmaloney/microsqueak/)
 
@@ -29,8 +29,8 @@ MPyTool new
 ```
 
 # MicroPythonCoder
-MicroPythonCoder generates MicroPython code from Smalltalk-like MicroPython code.
-For example,
+MicroPythonCoder generates MicroPython code from a method or methods of a class.
+For example, a code in Smalltalk,
 
 ```Smalltalk
 helloWorld
@@ -38,7 +38,7 @@ helloWorld
   self print: 'Hello, World!'
 ```
 
-It is converted into the following code.
+It is converted into the following MicroPython code.
 
 ```Python
 def hello_world():

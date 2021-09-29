@@ -16,16 +16,8 @@ MPyTool >> autoClose [
 
 { #category : #private }
 MPyTool >> autoOpen [
-	| pw |
-	proxy isConnected
-		ifFalse: [ proxy open
-				ifFalse: [ self error ].
-			proxy comm isWebRepl
-				ifTrue: [ proxy enterWebRepl.
-					pw := UIManager default request: 'Enter password'.
-					pw ifNil: [ ^ self close ].
-					proxy put: pw asByteArray , #[13].
-					self waitUntilPrompt ] ].
+	self privAutoOpen
+		ifFalse: [ ^ self ].
 	^ proxy break
 ]
 
@@ -99,17 +91,16 @@ MPyTool >> evaluate: aString [
 	aString isEmpty
 		ifTrue: [ ^ '' ].
 	self autoOpen.
-	aString lines size = 1
-		ifTrue: [ ^ proxy oneLiner: aString ].
 	ret := nil.
-	showProgress
-		ifTrue: [ UIManager default
-				displayProgress: 'Transferring ...'
-				from: 1
-				to: 100
-				during:
-					[ :bar | ret := proxy paste: aString during: [ :x | bar value: x ] ] ]
-		ifFalse: [ ret := proxy paste: aString ].
+	aString lines size = 1
+		ifTrue: [ ret := proxy oneLiner: aString ]
+		ifFalse: [ showProgress
+				ifTrue: [ UIManager default
+						displayProgress: 'Transferring ...'
+						from: 1
+						to: 100
+						during: [ :bar | ret := proxy paste: aString during: [ :x | bar value: x ] ] ]
+				ifFalse: [ ret := proxy paste: aString ] ].
 	self autoClose.
 	^ ret
 ]
@@ -149,6 +140,23 @@ MPyTool >> initialize [
 { #category : #testing }
 MPyTool >> isConnected [
 	^ proxy isConnected
+]
+
+{ #category : #private }
+MPyTool >> privAutoOpen [
+	| pw |
+	proxy isConnected
+		ifFalse: [ proxy open
+				ifFalse: [ self error ].
+			proxy comm isWebRepl
+				ifTrue: [ proxy enterWebRepl.
+					pw := UIManager default request: 'Enter password'.
+					pw
+						ifNil: [ self close.
+							^ false ].
+					proxy put: pw asByteArray , #[13].
+					self waitUntilPrompt ] ].
+	^ true
 ]
 
 { #category : #accessing }
@@ -287,6 +295,8 @@ MPyTool >> useWebRepl [
 
 { #category : #api }
 MPyTool >> waitUntilPrompt [
+	self privAutoOpen
+		ifFalse: [ ^ nil ].
 	[ proxy checkPrompt ]
 		whileFalse: [ proxy step.
 			100 milliSeconds wait ].

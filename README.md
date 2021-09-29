@@ -25,8 +25,7 @@ mp waitUntilPrompt.
 ```Smalltalk
 MPyTool new
   useSerial;
-  upload: 'print("Hello")' fileNamed: 'main.py';
-  close.
+  upload: 'print("Hello")' fileNamed: 'main.py'.
 ```
 
 # MicroPythonCoder
@@ -49,17 +48,24 @@ def hello_world():
 There are several types of devices using MicroPython. Currently MicroPythonCoder supports only ESP8266/ESP32 and micro:bit devices. See samples.
 
 ## Usage
-To get MicroPython code string of a class, send #asMicroPython message to the class.
+To get MicroPython code of a class, send #asMicroPython message to the class.
 
 ```smalltalk
 ESP8266Sample asMicroPython
 ```
 
-To execute whole the class in a device.
+To execute whole the class in a device,
 
 ```smalltalk
 MPyTool new
   useSerial;
-  execute: ESP8266Sample asMicroPython;
-  close.
+  execute: ESP8266Sample asMicroPython.
+```
+
+To store the code as a 'main.py' file,
+
+```smalltalk
+MPyTool new
+  useSerial;
+  upload: ESP8266Sample asMicroPython fileNamed: 'main.py'.
 ```

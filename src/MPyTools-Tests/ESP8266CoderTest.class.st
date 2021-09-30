@@ -13,6 +13,65 @@ ESP8266CoderTest >> newCoder [
 ]
 
 { #category : #test }
+ESP8266CoderTest >> testEmitBuiltinConstructForOnIndent [
+	| c n1 n2 n3 n4 s r |
+	s := WriteStream on: String new.
+	n1 := TrVariableNode new name: 'wlan'.
+	n2 := TrConstantNode new value: 'ESSID'.
+	n3 := TrConstantNode new value: 'PASSWORD'.
+	n4 := TrSendNode new
+		receiver: n1;
+		selector: #connect:password:;
+		arguments:
+			{n2.
+			n3}.
+	c := self newCoder.
+	r := c emitBuiltinConstructFor: n4 on: s indent: 0.
+	self assert: r.
+	self assert: s contents equals: 'wlan.connect("ESSID","PASSWORD")'.
+	s := WriteStream on: String new.
+	n1 := TrVariableNode new name: 'MQTTClient'.
+	n2 := TrConstantNode new value: 'test'.
+	n3 := TrConstantNode new value: '192.168.254.123'.
+	n4 := TrSendNode new
+		receiver: n1;
+		selector: #initMqtt:ipaddr:;
+		arguments:
+			{n2.
+			n3}.
+	c := self newCoder.
+	r := c emitBuiltinConstructFor: n4 on: s indent: 0.
+	self assert: r.
+	self
+		assert: s contents
+		equals: 'MQTTClient("test","192.168.254.123")'.
+	s := WriteStream on: String new.
+	n1 := TrVariableNode new name: 'wlan'.
+	n2 := TrSendNode new
+		receiver: n1;
+		selector: #isConnected;
+		arguments: {}.
+	c := self newCoder.
+	r := c emitBuiltinConstructFor: n2 on: s indent: 0.
+	self assert: r.
+	self assert: s contents equals: 'wlan.isconnected()'.
+	s := WriteStream on: String new.
+	n1 := TrVariableNode new name: 'client'.
+	n2 := TrConstantNode new value: 'test'.
+	n3 := TrConstantNode new value: 'message'.
+	n4 := TrSendNode new
+		receiver: n1;
+		selector: #publish:message:;
+		arguments:
+			{n2.
+			n3}.
+	c := self newCoder.
+	r := c emitBuiltinConstructFor: n4 on: s indent: 0.
+	self assert: r.
+	self assert: s contents equals: 'client.publish("test","message")'
+]
+
+{ #category : #test }
 ESP8266CoderTest >> testGenerateAtModeOnIndent [
 	| c n1 n2 n3 n4 s |
 	s := WriteStream on: String new.
@@ -55,23 +114,6 @@ ESP8266CoderTest >> testGenerateAtOnIndent [
 ]
 
 { #category : #test }
-ESP8266CoderTest >> testGenerateConnectPasswordOnIndent [
-	| c n1 n2 n3 n4 s |
-	s := WriteStream on: String new.
-	n1 := TrVariableNode new name: 'wlan'.
-	n2 := TrConstantNode new value: 'ESSID'.
-	n3 := TrConstantNode new value: 'PASSWORD'.
-	n4 := TrSendNode new
-		receiver: n1;
-		arguments:
-			{n2.
-			n3}.
-	c := self newCoder.
-	c generateConnectPassword: n4 on: s indent: 0.
-	self assert: s contents equals: 'wlan.connect("ESSID","PASSWORD")'
-]
-
-{ #category : #test }
 ESP8266CoderTest >> testGenerateInitI2COnIndent [
 	| c n1 n2 n3 n4 n5 s |
 	s := WriteStream on: String new.
@@ -88,23 +130,6 @@ ESP8266CoderTest >> testGenerateInitI2COnIndent [
 	c := self newCoder.
 	c generateInitI2C: n5 on: s indent: 0.
 	self assert: s contents equals: 'I2C(scl=10,sda=20,freq=10000)'
-]
-
-{ #category : #test }
-ESP8266CoderTest >> testGenerateInitMqttIpaddrOnIndent [
-	| c n1 n2 n3 n4 s |
-	s := WriteStream on: String new.
-	n1 := TrVariableNode new name: 'MQTTClient'.
-	n2 := TrConstantNode new value: 'test'.
-	n3 := TrConstantNode new value: '192.168.254.123'.
-	n4 := TrSendNode new
-		receiver: n1;
-		arguments:
-			{n2.
-			n3}.
-	c := self newCoder.
-	c generateInitMqttIpaddr: n4 on: s indent: 0.
-	self assert: s contents equals: 'MQTTClient("test","192.168.254.123")'
 ]
 
 { #category : #test }
@@ -141,36 +166,6 @@ ESP8266CoderTest >> testGenerateInitWifiOnIndent [
 	c := self newCoder.
 	c generateInitWifi: n3 on: s indent: 0.
 	self assert: s contents equals: 'network.WLAN(network.STA_IF)'
-]
-
-{ #category : #test }
-ESP8266CoderTest >> testGenerateIsConnectedOnIndent [
-	| c n1 n2 s |
-	s := WriteStream on: String new.
-	n1 := TrVariableNode new name: 'wlan'.
-	n2 := TrSendNode new
-		receiver: n1;
-		arguments: {}.
-	c := self newCoder.
-	c generateIsConnected: n2 on: s indent: 0.
-	self assert: s contents equals: 'wlan.isconnected()'
-]
-
-{ #category : #test }
-ESP8266CoderTest >> testGeneratePublishMessageOnIndent [
-	| c n1 n2 n3 n4 s |
-	s := WriteStream on: String new.
-	n1 := TrVariableNode new name: 'client'.
-	n2 := TrConstantNode new value: 'test'.
-	n3 := TrConstantNode new value: 'message'.
-	n4 := TrSendNode new
-		receiver: n1;
-		arguments:
-			{n2.
-			n3}.
-	c := self newCoder.
-	c generatePublishMessage: n4 on: s indent: 0.
-	self assert: s contents equals: 'client.publish("test","message")'
 ]
 
 { #category : #test }
@@ -253,6 +248,15 @@ ESP8266CoderTest >> testGenerateWriteToOnIndent [
 	c := self newCoder.
 	c generateWriteTo: n6 on: s indent: 0.
 	self assert: s contents equals: 'i2c.writeto(100,bytes([1,2]))'
+]
+
+{ #category : #test }
+ESP8266CoderTest >> testSimpleTranslationPair [
+	| c p |
+	c := self newCoder.
+	p := c simpleTranslationPair.
+	self assert: p isArray.
+	self assert: p size \\ 2 equals: 0
 ]
 
 { #category : #test }

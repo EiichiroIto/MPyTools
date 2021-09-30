@@ -26,11 +26,6 @@ ESP8266Coder >> generateAtMode: aNode on: aStream indent: anInteger [
 ]
 
 { #category : #translation }
-ESP8266Coder >> generateConnectPassword: aNode on: aStream indent: anInteger [ 
-	self generateFunction: 'connect' node: aNode on: aStream indent: anInteger
-]
-
-{ #category : #translation }
 ESP8266Coder >> generateInitI2C: aNode on: aStream indent: anInteger [
 	self emitExpression: aNode receiver on: aStream.
 	aStream nextPutAll: '(scl='.
@@ -40,11 +35,6 @@ ESP8266Coder >> generateInitI2C: aNode on: aStream indent: anInteger [
 	aStream nextPutAll: ',freq='.
 	self emitExpression: aNode arguments third on: aStream.
 	aStream nextPut: $)
-]
-
-{ #category : #translation }
-ESP8266Coder >> generateInitMqttIpaddr: aNode on: aStream indent: anInteger [
-	self generateFunction: '' node: aNode on: aStream indent: anInteger
 ]
 
 { #category : #translation }
@@ -70,16 +60,6 @@ ESP8266Coder >> generateInitWifi: aNode on: aStream indent: anInteger [
 	aStream nextPutAll: 'network.WLAN(network.'.
 	aNode arguments first emitCode: self on: aStream indent: anInteger.
 	aStream nextPut: $)
-]
-
-{ #category : #translation }
-ESP8266Coder >> generateIsConnected: aNode on: aStream indent: anInteger [
-	self generateFunction: 'isconnected' node: aNode on: aStream indent: anInteger
-]
-
-{ #category : #translation }
-ESP8266Coder >> generatePublishMessage: aNode on: aStream indent: anInteger [
-	self generateFunction: 'publish' node: aNode on: aStream indent: anInteger
 ]
 
 { #category : #translation }
@@ -133,22 +113,30 @@ ESP8266Coder >> generateWriteTo: aNode on: aStream indent: anInteger [
 ]
 
 { #category : #private }
+ESP8266Coder >> simpleTranslationPair [
+	^ super simpleTranslationPair
+		,
+			#(
+		#connect:password: #connect
+		#initMqtt:ipaddr: ''
+		#isConnected #isconnected
+		#publish:message: #publish
+			)
+]
+
+{ #category : #private }
 ESP8266Coder >> translationPair [
 	^ super translationPair
 		,
 			#(
 		#at: #generateAt:on:indent:
 		#at:mode: #generateAtMode:on:indent:
-		#connect:password: #generateConnectPassword:on:indent:
 		#initWifi: #generateInitWifi:on:indent:
-		#isConnected #generateIsConnected:on:indent:
 		#socket:stream: #generateSocketStream:on:indent:
 		#initScl:sda:freq: #generateInitI2C:on:indent:
 		#write:to: #generateWriteTo:on:indent:
 		#read:from: #generateReadFrom:on:indent:
 		#start:with: #generateStartWith:on:indent:
-		#initMqtt:ipaddr: #generateInitMqttIpaddr:on:indent:
-		#publish:message: #generatePublishMessage:on:indent:
 
 			)
 ]

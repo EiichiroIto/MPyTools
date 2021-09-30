@@ -2,7 +2,8 @@ Class {
 	#name : #MicroPythonCoder,
 	#superclass : #TrCoder,
 	#instVars : [
-		'classes'
+		'classes',
+		'simpleTranslationDict'
 	],
 	#category : #'MPyTools-MicroPython'
 }
@@ -23,6 +24,16 @@ MicroPythonCoder >> addClass: aClass methodSelector: aSymbol [
 	trMethod := self newMethodFrom: (aClass>>aSymbol) sourceCode.
 	trMethod trClass: trClass.
 	trClass addMethod: trMethod
+]
+
+{ #category : #private }
+MicroPythonCoder >> buildSimpleTranslationDictionary [
+	"Initialize the dictionary mapping message names to actions for C code generation."
+
+	| dictionary |
+	dictionary := Dictionary new.
+	self simpleTranslationPair pairsDo: [ :a :b | dictionary at: a put: b ].
+	^ dictionary
 ]
 
 { #category : #utilities }
@@ -92,6 +103,16 @@ MicroPythonCoder >> emitAssignment: aNode on: aStream indent: anInteger [
 	aNode variable emitCode: self on: aStream indent: anInteger.
 	aStream nextPutAll: ' = '.
 	aNode expression emitCode: self on: aStream indent: anInteger
+]
+
+{ #category : #'code generation' }
+MicroPythonCoder >> emitBuiltinConstructFor: msgNode on: aStream indent: level [
+	| selector |
+	selector := simpleTranslationDict
+		at: msgNode selector
+		ifAbsent: [ ^ super emitBuiltinConstructFor: msgNode on: aStream indent: level ].
+	self generateFunction: selector node: msgNode on: aStream indent: level.
+	^ true
 ]
 
 { #category : #api }
@@ -345,11 +366,6 @@ MicroPythonCoder >> generateAsInteger: aNode on: aStream indent: anInteger [
 	aStream nextPutAll: 'int('.
 	self emitExpression: aNode receiver on: aStream.
 	aStream nextPut: $)
-]
-
-{ #category : #translation }
-MicroPythonCoder >> generateAsLowercase: aNode on: aStream indent: anInteger [ 
-	self generateFunction: 'lower' node: aNode on: aStream indent: anInteger
 ]
 
 { #category : #translation }
@@ -775,11 +791,6 @@ MicroPythonCoder >> generateRepeat: aNode on: aStream indent: anInteger [
 ]
 
 { #category : #translation }
-MicroPythonCoder >> generateSearchFrom: aNode on: aStream indent: anInteger [ 
-	self generateFunction: 'search' node: aNode on: aStream indent: anInteger
-]
-
-{ #category : #translation }
 MicroPythonCoder >> generateSecond: msgNode on: aStream indent: level [
 	self emitExpression: msgNode receiver on: aStream.
 	aStream nextPutAll: '[1]'
@@ -944,7 +955,8 @@ MicroPythonCoder >> generateWhileTrue: aNode on: aStream indent: anInteger [
 { #category : #initialization }
 MicroPythonCoder >> initialize [
 	super initialize.
-	classes := OrderedCollection new
+	classes := OrderedCollection new.
+	simpleTranslationDict := self buildSimpleTranslationDictionary
 ]
 
 { #category : #testing }
@@ -1012,6 +1024,24 @@ MicroPythonCoder >> privAddClass: aClass [
 	^ newClass
 ]
 
+{ #category : #accessing }
+MicroPythonCoder >> simpleTranslationDict [
+	^ simpleTranslationDict
+]
+
+{ #category : #accessing }
+MicroPythonCoder >> simpleTranslationDict: anObject [
+	simpleTranslationDict := anObject
+]
+
+{ #category : #private }
+MicroPythonCoder >> simpleTranslationPair [
+	^ #(
+	#asLowercase #lower
+	#search:from: #search
+		)
+]
+
 { #category : #utilities }
 MicroPythonCoder >> stringLiteralFor: aString [
 	| r w c |
@@ -1061,8 +1091,6 @@ MicroPythonCoder >> translationPair [
 	#ninth #generateNinth:on:indent:
 	#tenth #generateTenth:on:indent:
 	#last #generateLast:on:indent:
-	#search:from: #generateSearchFrom:on:indent:
-	#asLowercase #generateAsLowercase:on:indent:
 	#ifNil:ifNotNil: #generateIfNilIfNotNil:on:indent:
 	#ifNil: #generateIfNil:on:indent:
 	#ifNotNil: #generateIfNotNil:on:indent:

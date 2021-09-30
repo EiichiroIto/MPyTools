@@ -23,6 +23,15 @@ MicroPythonCoderTest >> testAddClass [
 ]
 
 { #category : #test }
+MicroPythonCoderTest >> testBuildSimpleTranslationDictionary [
+	| c d |
+	c := self newCoder.
+	d := c buildSimpleTranslationDictionary.
+	self assert: (d isKindOf: Dictionary).
+	self assert: d notEmpty
+]
+
+{ #category : #test }
 MicroPythonCoderTest >> testCamelToUnderScore [
 	| c |
 	c := self newCoder.
@@ -33,6 +42,18 @@ MicroPythonCoderTest >> testCamelToUnderScore [
 	self assert: (c camelToUnderScore: 'List') equals: 'list'.
 	self assert: (c camelToUnderScore: 'isPressed') equals: 'is_pressed'.
 	self assert: (c camelToUnderScore: 'wasPressed') equals: 'was_pressed'
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testClassNamed [
+	| c r |
+	c := self newCoder.
+	c privAddClass: ESP8266Sample.
+	c privAddClass: MicrobitSample.
+	r := c classNamed: #ESP8266Sample.
+	self assert: r originalClass equals: ESP8266Sample.
+	r := c classNamed: #MicrobitSample.
+	self assert: r originalClass equals: MicrobitSample
 ]
 
 { #category : #test }
@@ -75,6 +96,35 @@ MicroPythonCoderTest >> testEmitArrayOnIndent [
 	s := WriteStream on: String new.
 	c emitArray: n on: s indent: 0.
 	self assert: s contents equals: 'bytes([])'
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testEmitBuiltinConstructForOnIndent [
+	| c n1 n2 n3 n4 s r |
+	s := WriteStream on: String new.
+	n1 := TrConstantNode new value: 'ABC'.
+	n2 := TrSendNode new
+		receiver: n1;
+		arguments: #();
+		selector: #asLowercase;
+		yourself.
+	c := self newCoder.
+	r := c emitBuiltinConstructFor: n2 on: s indent: 0.
+	self assert: r.
+	self assert: s contents equals: '"ABC".lower()'.
+	s := WriteStream on: String new.
+	n1 := TrVariableNode new name: 're'.
+	n2 := TrConstantNode new value: 'abc'.
+	n3 := TrConstantNode new value: 'def'.
+	n4 := TrSendNode new
+		receiver: n1;
+		arguments:
+			{n2.
+			n3};
+		selector: #search:from:.
+	c := self newCoder.
+	r := c emitBuiltinConstructFor: n4 on: s indent: 0.
+	self assert: s contents equals: 're.search("abc","def")'
 ]
 
 { #category : #test }
@@ -195,6 +245,17 @@ MicroPythonCoderTest >> testGenerateAsFloatOnIndent [
 ]
 
 { #category : #test }
+MicroPythonCoderTest >> testGenerateAsFunctionNameOnIndent [
+	| c n1 n2 s |
+	s := WriteStream on: String new.
+	n1 := TrConstantNode new value: #testCase.
+	n2 := TrSendNode new receiver: n1.
+	c := self newCoder.
+	c generateAsFunctionName: n2 on: s indent: 0.
+	self assert: s contents equals: 'test_case'
+]
+
+{ #category : #test }
 MicroPythonCoderTest >> testGenerateAsIntegerOnIndent [
 	| c n1 n2 s |
 	s := WriteStream on: String new.
@@ -203,20 +264,6 @@ MicroPythonCoderTest >> testGenerateAsIntegerOnIndent [
 	c := self newCoder.
 	c generateAsInteger: n2 on: s indent: 0.
 	self assert: s contents equals: 'int(12.3)'
-]
-
-{ #category : #test }
-MicroPythonCoderTest >> testGenerateAsLowercaseOnIndent [
-	| c n1 n2 s |
-	s := WriteStream on: String new.
-	n1 := TrConstantNode new value: 'ABC'.
-	n2 := TrSendNode new
-		receiver: n1;
-		arguments: #();
-		yourself.
-	c := self newCoder.
-	c generateAsLowercase: n2 on: s indent: 0.
-	self assert: s contents equals: '"ABC".lower()'
 ]
 
 { #category : #test }
@@ -1054,19 +1101,6 @@ MicroPythonCoderTest >> testGenerateRepeatOnIndent [
 ]
 
 { #category : #test }
-MicroPythonCoderTest >> testGenerateSearchFromOnIndent [
-	| c n1 n2 n3 n4 s |
-	s := WriteStream on: String new.
-	n1 := TrVariableNode new name: 're'.
-	n2 := TrConstantNode new value: 'abc'.
-	n3 := TrConstantNode new value: 'def'.
-	n4 := TrSendNode new receiver: n1; arguments: { n2. n3 }.
-	c := self newCoder.
-	c generateSearchFrom: n4 on: s indent: 0.
-	self assert: s contents equals: 're.search("abc","def")'
-]
-
-{ #category : #test }
 MicroPythonCoderTest >> testGenerateSecondOnIndent [
 	| c n1 n2 s |
 	s := WriteStream on: String new.
@@ -1397,6 +1431,25 @@ MicroPythonCoderTest >> testPrivAddClass [
 	self assert: (x variables includes: #a).
 	y := c privAddClass: MicroPythonSample.
 	self assert: x identicalTo: y
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testSimpleTranslationDict [
+	| c d |
+	c := self newCoder.
+	self assert: c simpleTranslationDict isDictionary.
+	d := Dictionary new.
+	c simpleTranslationDict: d.
+	self assert: c simpleTranslationDict identicalTo: d
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testSimpleTranslationPair [
+	| c p |
+	c := self newCoder.
+	p := c simpleTranslationPair.
+	self assert: p isArray.
+	self assert: p size \\ 2 equals: 0
 ]
 
 { #category : #test }

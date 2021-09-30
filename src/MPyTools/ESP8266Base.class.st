@@ -35,6 +35,7 @@ Class {
 	],
 	#classVars : [
 		'ADC',
+		'MQTTClient',
 		'NeoPixel',
 		'PWM',
 		'Pin',
@@ -57,6 +58,8 @@ ESP8266Base class >> recordModuleNamed: aString into: aModules [
 	(#('ADC' 'SoftI2C' 'Pin' 'RTC' 'PWM' 'SoftSPI' 'UART')
 		includes: aString)
 		ifTrue: [ ^ aModules from: 'machine' import: aString ].
+	aString = 'MQTTClient'
+		ifTrue: [ ^ aModules from: 'umqtt.robust' import: aString ].
 	aString = 'WLAN'
 		ifTrue: [ ^ aModules import: 'network' ].
 	aString = 'NeoPixel'
@@ -71,6 +74,16 @@ ESP8266Base >> at: anInteger mode: aSymbol [
 
 { #category : #networking }
 ESP8266Base >> bind: anArray [
+	self shouldBeImplemented
+]
+
+{ #category : #mqtt }
+ESP8266Base >> checkMsg [
+	self shouldBeImplemented
+]
+
+{ #category : #mqtt }
+ESP8266Base >> connect [
 	self shouldBeImplemented
 ]
 
@@ -89,8 +102,18 @@ ESP8266Base >> datetime: anArray [
 	self shouldBeImplemented
 ]
 
+{ #category : #mqtt }
+ESP8266Base >> disconnect [
+	self shouldBeImplemented
+]
+
 { #category : #networking }
 ESP8266Base >> ifconfig [
+	self shouldBeImplemented
+]
+
+{ #category : #mqtt }
+ESP8266Base >> initMqtt: aString ipaddr: aString2 [
 	self shouldBeImplemented
 ]
 
@@ -104,6 +127,11 @@ ESP8266Base >> initScl: aPin sda: aPin2 freq: anInteger [
 	self shouldBeImplemented
 ]
 
+{ #category : #uart }
+ESP8266Base >> initUart: anInteger baudRate: anInteger2 tx: anInteger3 rx: anInteger4 [
+	self shouldBeImplemented
+]
+
 { #category : #networking }
 ESP8266Base >> initWifi: aSymbol [
 	self shouldBeImplemented
@@ -111,6 +139,11 @@ ESP8266Base >> initWifi: aSymbol [
 
 { #category : #networking }
 ESP8266Base >> listen: anInteger [
+	self shouldBeImplemented
+]
+
+{ #category : #mqtt }
+ESP8266Base >> publish: aString msg: aString2 [
 	self shouldBeImplemented
 ]
 
@@ -129,6 +162,11 @@ ESP8266Base >> send: aString [
 	self shouldBeImplemented
 ]
 
+{ #category : #mqtt }
+ESP8266Base >> setCallback: aSymbol [
+	self shouldBeImplemented
+]
+
 { #category : #accessing }
 ESP8266Base >> settime [
 	self shouldBeImplemented
@@ -141,6 +179,16 @@ ESP8266Base >> socket: aSymbol stream: aSymbol2 [
 
 { #category : #misc }
 ESP8266Base >> start: anObject with: anArray [
+	self shouldBeImplemented
+]
+
+{ #category : #mqtt }
+ESP8266Base >> subscribe: aString [
+	self shouldBeImplemented
+]
+
+{ #category : #mqtt }
+ESP8266Base >> waitMsg [
 	self shouldBeImplemented
 ]
 

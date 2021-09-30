@@ -69,6 +69,11 @@ MicroPythonBase class >> recordModuleNamed: aString into: aModules [
 ]
 
 { #category : #misc }
+MicroPythonBase >> asFunctionName [
+	self shouldBeImplemented
+]
+
+{ #category : #misc }
 MicroPythonBase >> from: aSymbol import: aClass [
 	self shouldBeImplemented
 ]

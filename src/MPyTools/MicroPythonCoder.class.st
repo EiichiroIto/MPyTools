@@ -332,6 +332,15 @@ MicroPythonCoder >> generateAsFloat: aNode on: aStream indent: anInteger [
 ]
 
 { #category : #translation }
+MicroPythonCoder >> generateAsFunctionName: aNode on: aStream indent: anInteger [
+	| selector |
+	(aNode receiver isConstant and: [ aNode receiver value isSymbol ])
+		ifFalse: [ self error ].
+	selector := aNode receiver value.
+	aStream nextPutAll: (self functionNameFor: selector)
+]
+
+{ #category : #translation }
 MicroPythonCoder >> generateAsInteger: aNode on: aStream indent: anInteger [ 
 	aStream nextPutAll: 'int('.
 	self emitExpression: aNode receiver on: aStream.
@@ -486,10 +495,11 @@ MicroPythonCoder >> generateFromImport: aNode on: aStream indent: anInteger [
 { #category : #translation }
 MicroPythonCoder >> generateFunction: aString node: aNode on: aStream indent: anInteger [
 	self emitExpression: aNode receiver on: aStream.
-	aStream
-		nextPut: $.;
-		nextPutAll: aString;
-		nextPut: $(.
+	aString notEmpty
+		ifTrue: [ aStream
+				nextPut: $.;
+				nextPutAll: aString ].
+	aStream nextPut: $(.
 	aNode arguments
 		do: [ :each | self emitExpression: each on: aStream ]
 		separatedBy: [ aStream nextPut: $, ].
@@ -1038,6 +1048,7 @@ MicroPythonCoder >> translationPair [
 	#asCollection #generateAsCollection:on:indent:
 	#asString #generateAsString:on:indent:
 	#asByteArray #generateAsByteArray:on:indent:
+	#asFunctionName #generateAsFunctionName:on:indent:
 	#new:withAll: #generateNewWithAll:on:indent:
 	#new #generateNew:on:indent:
 	#first #generateFirst:on:indent:

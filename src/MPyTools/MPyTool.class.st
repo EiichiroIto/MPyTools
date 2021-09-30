@@ -146,16 +146,18 @@ MPyTool >> isConnected [
 MPyTool >> privAutoOpen [
 	| pw |
 	proxy isConnected
-		ifFalse: [ proxy open
-				ifFalse: [ self error ].
-			proxy comm isWebRepl
-				ifTrue: [ proxy enterWebRepl.
-					pw := UIManager default request: 'Enter password'.
-					pw
-						ifNil: [ self close.
-							^ false ].
-					proxy put: pw asByteArray , #[13].
-					self waitUntilPrompt ] ].
+		ifTrue: [ ^ true ].
+	proxy open
+		ifFalse: [ self error ].
+	proxy comm isWebRepl
+		ifFalse: [ ^ true ].
+	proxy enterWebRepl.
+	pw := UIManager default request: 'Enter password'.
+	pw
+		ifNil: [ self close.
+			^ false ].
+	proxy put: pw asByteArray , #[13].
+	self waitUntilPrompt.
 	^ true
 ]
 

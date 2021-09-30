@@ -20,8 +20,8 @@ ESP8266Sample class >> example1 [
 { #category : #'class initialization' }
 ESP8266Sample class >> initialize [
 	"self initialize"
-	"ESSID := 'AIBONET2'."
-	ESSID := 'itolab'.
+	ESSID := 'AIBONET2'.
+	"ESSID := 'itolab'."
 	PASSWORD := '12345678'.
 	TZOFFSET := 9 * 3600
 ]

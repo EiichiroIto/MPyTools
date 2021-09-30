@@ -43,6 +43,25 @@ ESP8266Coder >> generateInitI2C: aNode on: aStream indent: anInteger [
 ]
 
 { #category : #translation }
+ESP8266Coder >> generateInitMqttIpaddr: aNode on: aStream indent: anInteger [
+	self generateFunction: '' node: aNode on: aStream indent: anInteger
+]
+
+{ #category : #translation }
+ESP8266Coder >> generateInitUartBaudRateTxRx: aNode on: aStream indent: anInteger [
+	self emitExpression: aNode receiver on: aStream.
+	aStream nextPut: $(.
+	self emitExpression: aNode arguments first on: aStream.
+	aStream nextPutAll: ',baudrate='.
+	self emitExpression: aNode arguments second on: aStream.
+	aStream nextPutAll: ',tx='.
+	self emitExpression: aNode arguments third on: aStream.
+	aStream nextPutAll: ',rx='.
+	self emitExpression: aNode arguments fourth on: aStream.
+	aStream nextPut: $)
+]
+
+{ #category : #translation }
 ESP8266Coder >> generateInitWifi: aNode on: aStream indent: anInteger [
 	| rcvr |
 	rcvr := aNode receiver.
@@ -56,6 +75,11 @@ ESP8266Coder >> generateInitWifi: aNode on: aStream indent: anInteger [
 { #category : #translation }
 ESP8266Coder >> generateIsConnected: aNode on: aStream indent: anInteger [
 	self generateFunction: 'isconnected' node: aNode on: aStream indent: anInteger
+]
+
+{ #category : #translation }
+ESP8266Coder >> generatePublishMessage: aNode on: aStream indent: anInteger [
+	self generateFunction: 'publish' node: aNode on: aStream indent: anInteger
 ]
 
 { #category : #translation }
@@ -123,5 +147,8 @@ ESP8266Coder >> translationPair [
 		#write:to: #generateWriteTo:on:indent:
 		#read:from: #generateReadFrom:on:indent:
 		#start:with: #generateStartWith:on:indent:
+		#initMqtt:ipaddr: #generateInitMqttIpaddr:on:indent:
+		#publish:message: #generatePublishMessage:on:indent:
+
 			)
 ]

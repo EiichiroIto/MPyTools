@@ -3,7 +3,16 @@ MicroPython tools for Pharo Smalltalk
 
 [![Build Status](https://app.travis-ci.com/EiichiroIto/MPyTools.svg?branch=master)](https://app.travis-ci.com/EiichiroIto/MPyTools)
 
-MPyTools has two functionalities, which communicates with MicroPython devices, and which generates MicroPython codes from Smalltalk-like MicroPython code.
+MPyTools is a tool for developing application of MicroPython devices using Pharo Smalltalk.
+
+It consists of following tools.
+
+* Communication tool which interacts with MicroPython devices.
+* Generator tool which generates MicroPython codes from Smalltalk class.
+
+You can make MicroPython application using Pharo System Browser, and then check it by transfering it to MicroPython device directly.
+
+## Acknowledgement
 
 This project is inspired from MicroSqueak and rewrited some codes in Pharo Smalltalk. (https://web.media.mit.edu/~jmaloney/microsqueak/)
 

@@ -455,6 +455,13 @@ MicroPythonCoder >> generateBitXor: aNode on: aStream indent: anInteger [
 ]
 
 { #category : #translation }
+MicroPythonCoder >> generateClass: aNode on: aStream indent: anInteger [
+	(aNode receiver isVariable and: [ aNode receiver name = 'self' ])
+		ifFalse: [ self error: 'receiver must be self' ].
+	aStream nextPutAll: targetClass name
+]
+
+{ #category : #translation }
 MicroPythonCoder >> generateComma: aNode on: aStream indent: anInteger [ 
 	self generatePlus: aNode on: aStream indent: anInteger
 ]
@@ -1096,6 +1103,7 @@ MicroPythonCoder >> translationPair [
 	#ifNotNil: #generateIfNotNil:on:indent:
 	#from:import: #generateFromImport:on:indent:
 	#abs #generateAbs:on:indent:
+	#class #generateClass:on:indent:
 			)
 ]
 

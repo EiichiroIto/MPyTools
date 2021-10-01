@@ -411,6 +411,18 @@ MicroPythonCoderTest >> testGenerateBitXorOnIndent [
 ]
 
 { #category : #test }
+MicroPythonCoderTest >> testGenerateClassOnIndent [
+	| c n1 n2 s |
+	s := WriteStream on: String new.
+	n1 := TrVariableNode new name: 'self'.
+	n2 := TrSendNode new receiver: n1; selector: #class.
+	c := self newCoder.
+	c targetClass: ESP8266Sample.
+	c generateClass: n2 on: s indent: 0.
+	self assert: s contents equals: 'ESP8266Sample'
+]
+
+{ #category : #test }
 MicroPythonCoderTest >> testGenerateCommaOnIndent [
 	| c n1 n2 n3 s |
 	s := WriteStream on: String new.

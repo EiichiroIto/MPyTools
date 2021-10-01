@@ -202,7 +202,7 @@ AutoFeeder >> setup [
 AutoFeeder >> start [
 	| a |
 	self isTopLevel: true.
-	a := AutoFeeder new.
+	a := self class new.
 	a opening.
 	a setup.
 	_thread start: a main with: #().

@@ -68,8 +68,8 @@ MaqueenLineTracer >> run [
 MaqueenLineTracer >> start [
 	| app |
 	self isTopLevel: true.
-	display scroll: 'Press A'.
-	app := MaqueenLineTracer new.
+	display scroll: 'PressA'.
+	app := self class new.
 	app lightOn.
 	app waitForButtonAPressed.
 	app run

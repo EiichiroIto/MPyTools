@@ -94,8 +94,8 @@ TrSendNode >> isBuiltinOperator: anObject [
 
 { #category : #testing }
 TrSendNode >> isLeaf [
-	"^ selector isInfix not"
-	^ super isLeaf
+	"for #class message"
+	^ selector = #class
 ]
 
 { #category : #testing }

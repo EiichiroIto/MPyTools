@@ -13,6 +13,15 @@ IdentifierGeneratorTest >> newGenerator [
 ]
 
 { #category : #test }
+IdentifierGeneratorTest >> testCurrent [
+	| g |
+	g := self newGenerator.
+	self assert: g current isNil.
+	g current: 'abc'.
+	self assert: g current equals: 'abc'
+]
+
+{ #category : #test }
 IdentifierGeneratorTest >> testNext [
 	| g |
 	g := self newGenerator.

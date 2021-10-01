@@ -56,6 +56,12 @@ TrArrayNode >> isLeaf [
 	^ true
 ]
 
+{ #category : #enumerating }
+TrArrayNode >> nodesDo: aBlock [
+	contents do: [ :each | each nodesDo: aBlock ].
+	aBlock value: self
+]
+
 { #category : #printing }
 TrArrayNode >> printOn: aStream level: level [
 	aStream

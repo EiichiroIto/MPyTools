@@ -69,3 +69,12 @@ MPyTool new
   useSerial;
   upload: ESP8266Sample asMicroPython fileNamed: 'main.py'.
 ```
+
+# Installation
+
+```smalltalk
+Metacello new
+    baseline: 'MPyTools';
+    repository: 'github://EiichiroIto/MPyTools/src';
+    load.
+````

@@ -3,6 +3,11 @@ This is a sample application using MicroPythonCoder.
 
 M5Atom Lite controls a junk Pet's Auto Feeder when uploaded to the device.
 
+- It connect wifi and adjust time using NTP.
+- It feeds one portion when powered.
+- It feeds three times a day at specified time.
+- It accepts web connections for feeding manually.
+
 Connection Schema.
 
 M5AtomLite     Auto Feeder
@@ -10,17 +15,20 @@ M5AtomLite     Auto Feeder
   GPIO21         SCL (i2c motor driver)
   GPIO25         SDL (i2c motor driver)
 
+To generate source.
+  AutoFeeder asMicroPython.
+
 To upload it.
 
    MPyTool new
       useSerial;
-      upload: AutoFeeder asMicroPython fileNamed: 'main.py';
-      reboot
+      uploadClass: AutoFeeder;
+      reboot.
 
 "
 Class {
 	#name : #AutoFeeder,
-	#superclass : #M5AtomLite,
+	#superclass : #ESP8266Base,
 	#instVars : [
 		'button',
 		'np',
@@ -29,7 +37,18 @@ Class {
 		'portion'
 	],
 	#classVars : [
+		'BUTTON',
 		'ESSID',
+		'GPIO19',
+		'GPIO21',
+		'GPIO22',
+		'GPIO23',
+		'GPIO25',
+		'GPIO26',
+		'GPIO32',
+		'GPIO33',
+		'IR',
+		'NEOPIXEL',
 		'PASSWORD',
 		'TZOFFSET'
 	],
@@ -42,7 +61,18 @@ AutoFeeder class >> initialize [
 	"ESSID := 'AIBONET2'."
 	ESSID := 'itolab'.
 	PASSWORD := '12345678'.
-	TZOFFSET := 9 * 3600
+	TZOFFSET := 9 * 3600.
+	BUTTON := 39.
+	NEOPIXEL := 27.
+	GPIO19 := 19.
+	GPIO21 := 21.
+	GPIO22 := 22.
+	GPIO23 := 23.
+	GPIO25 := 25.
+	GPIO26 := 26.
+	GPIO32 := 32.
+	GPIO33 := 33.
+	IR := 12
 ]
 
 { #category : #networking }
@@ -76,7 +106,7 @@ AutoFeeder >> error: aString [
 AutoFeeder >> executedHtml [
 	^ '<!DOCTYPE html><html><head><title>M5Atom Lite Auto Feeder</title></head>'
 		, '<body><p>manual feed ' , portion asString , ' portions' , '</p>'
-		, '<p><a href="?">Home</a></p></body></html>'
+		, '<p><a href="/">Home</a></p></body></html>'
 ]
 
 { #category : #private }
@@ -150,7 +180,8 @@ AutoFeeder >> main [
 	c > 0
 		ifTrue: [ self feedPortion: c.
 			self led: #(128 128 0).
-			time sleep: 60 ]
+			time sleep: 60.
+			portion := 0 ]
 		ifFalse: [ self isButtonOn
 				ifTrue: [ self led: #(0 0 128).
 					self feedPortion: 1 ]

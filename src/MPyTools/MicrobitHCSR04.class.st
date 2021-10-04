@@ -6,8 +6,7 @@ Preparation:
 
 MPyTool new
 	useSerial;
-	uploadClass: MicrobitHCSR04;
-	close
+	uploadClass: MicrobitHCSR04.
 
 Usage:
 	self from: #hcsr04 import: MicrobitHCSR04.

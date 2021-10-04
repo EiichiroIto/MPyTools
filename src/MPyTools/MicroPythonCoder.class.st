@@ -726,6 +726,12 @@ MicroPythonCoder >> generateModulo: aNode on: aStream indent: anInteger [
 ]
 
 { #category : #translation }
+MicroPythonCoder >> generateNegated: msgNode on: aStream indent: level [
+	aStream nextPut: $-.
+	self emitExpression: msgNode receiver on: aStream
+]
+
+{ #category : #translation }
 MicroPythonCoder >> generateNew: aNode on: aStream indent: anInteger [
 	self emitExpression: aNode receiver on: aStream.
 	aStream nextPutAll: '()'
@@ -1104,6 +1110,7 @@ MicroPythonCoder >> translationPair [
 	#from:import: #generateFromImport:on:indent:
 	#abs #generateAbs:on:indent:
 	#class #generateClass:on:indent:
+	#negated #generateNegated:on:indent:
 			)
 ]
 

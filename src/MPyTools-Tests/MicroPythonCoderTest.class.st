@@ -995,6 +995,23 @@ MicroPythonCoderTest >> testGenerateModuloOnIndent [
 ]
 
 { #category : #test }
+MicroPythonCoderTest >> testGenerateNegatedOnIndent [
+	| c s n1 n2 |
+	c := self newCoder.
+	n1 := TrConstantNode new value: -5.
+	n2 := TrSendNode new receiver: n1.
+	s := WriteStream on: String new.
+	c generateNegated: n2 on: s indent: 0.
+	self assert: s contents equals: '--5'.
+	c := self newCoder.
+	n1 := TrVariableNode new name: 'x'.
+	n2 := TrSendNode new receiver: n1.
+	s := WriteStream on: String new.
+	c generateNegated: n2 on: s indent: 0.
+	self assert: s contents equals: '-x'
+]
+
+{ #category : #test }
 MicroPythonCoderTest >> testGenerateNewOnIndent [
 	| c s n1 n2 |
 	c := self newCoder.

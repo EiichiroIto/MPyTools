@@ -31,7 +31,8 @@ Class {
 		'ntptime',
 		'random',
 		'socket',
-		'_thread'
+		'_thread',
+		'ubinascii'
 	],
 	#classVars : [
 		'ADC',
@@ -104,6 +105,11 @@ ESP8266Base >> datetime: anArray [
 
 { #category : #mqtt }
 ESP8266Base >> disconnect [
+	self shouldBeImplemented
+]
+
+{ #category : #ubinascii }
+ESP8266Base >> hexlify: aByteArray [
 	self shouldBeImplemented
 ]
 
@@ -184,6 +190,11 @@ ESP8266Base >> start: anObject with: anArray [
 
 { #category : #mqtt }
 ESP8266Base >> subscribe: aString [
+	self shouldBeImplemented
+]
+
+{ #category : #machine }
+ESP8266Base >> uniqueId [
 	self shouldBeImplemented
 ]
 

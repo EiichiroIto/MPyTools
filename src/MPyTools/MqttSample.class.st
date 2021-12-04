@@ -28,7 +28,7 @@ MqttSample >> connectWifi: aString password: aString2 [
 { #category : #samples }
 MqttSample >> publishTest [
 	10
-		timesRepeat: [ client publish: 'test' message: 'Hello'.
+		timesRepeat: [ client publish: 'test' msg: 'Hello'.
 			time sleep: 1 ]
 ]
 

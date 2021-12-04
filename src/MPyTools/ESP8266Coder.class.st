@@ -120,7 +120,7 @@ ESP8266Coder >> simpleTranslationPair [
 		#connect:password: #connect
 		#initMqtt:ipaddr: ''
 		#isConnected #isconnected
-		#publish:message: #publish
+		#publish:msg: #publish
 			)
 ]
 

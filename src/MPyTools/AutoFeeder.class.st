@@ -34,7 +34,9 @@ Class {
 		'np',
 		'sw',
 		'i2c',
-		'portion'
+		'portion',
+		'sub',
+		'pub'
 	],
 	#classVars : [
 		'BUTTON',
@@ -48,6 +50,9 @@ Class {
 		'GPIO32',
 		'GPIO33',
 		'IR',
+		'MQTTCommand',
+		'MQTTSERVER',
+		'MQTTStatus',
 		'NEOPIXEL',
 		'PASSWORD',
 		'TZOFFSET'
@@ -61,6 +66,11 @@ AutoFeeder class >> initialize [
 	"ESSID := 'AIBONET2'."
 	ESSID := 'itolab'.
 	PASSWORD := '12345678'.
+	MQTTSERVER := '219.94.240.178'.
+	MQTTStatus := '/home/autofeeder1/status'.
+	MQTTCommand := '/home/autofeeder1/command'.
+	"MQTTStatus := '/home/autofeeder2/status'.
+	MQTTCommand := '/home/autofeeder2/command'."
 	TZOFFSET := 9 * 3600.
 	BUTTON := 39.
 	NEOPIXEL := 27.
@@ -75,6 +85,11 @@ AutoFeeder class >> initialize [
 	IR := 12
 ]
 
+{ #category : #private }
+AutoFeeder >> clientId [
+	^ ubinascii hexlify: machine uniqueId
+]
+
 { #category : #networking }
 AutoFeeder >> connectWifi [
 	| wlan |
@@ -86,13 +101,6 @@ AutoFeeder >> connectWifi [
 	self print: wlan ifconfig
 ]
 
-{ #category : #networking }
-AutoFeeder >> defaultHtml [
-	^ '<!DOCTYPE html><html><head><title>M5Atom Lite Auto Feeder</title></head>'
-		, '<body><p><a href="?value=1">feed 1 portion</a></p>'
-		, '<p><a href="?value=2">feed 2 portion</a></p></body></html>'
-]
-
 { #category : #'error handling' }
 AutoFeeder >> error: aString [
 	self print: 'Error:' , aString.
@@ -100,13 +108,6 @@ AutoFeeder >> error: aString [
 	time sleepMs: 500.
 	self led: #(0 0 0).
 	time sleepMs: 500 ] repeat
-]
-
-{ #category : #networking }
-AutoFeeder >> executedHtml [
-	^ '<!DOCTYPE html><html><head><title>M5Atom Lite Auto Feeder</title></head>'
-		, '<body><p>manual feed ' , portion asString , ' portions' , '</p>'
-		, '<p><a href="/">Home</a></p></body></html>'
 ]
 
 { #category : #private }
@@ -125,8 +126,9 @@ AutoFeeder >> feedCount [
 		ifTrue: [ ^ 2 ].
 	(hh = 18 and: [ mm = 0 ])
 		ifTrue: [ ^ 4 ].
-	(hh = 0 and: [ mm = 0 ])
-		ifTrue: [ ntptime settime ].
+	"(hh = 0 and: [ mm = 0 ])
+		ifTrue: [ self mqttStatus: 'ntp settime'.
+			ntptime settime ]."
 	^ 0
 ]
 
@@ -137,7 +139,8 @@ AutoFeeder >> feedPortion: anInteger [
 	anInteger
 		timesRepeat: [ [ self isFeedSwOn ] whileFalse: [ time sleepMs: 100 ].
 			[ self isFeedSwOn ] whileTrue: [ time sleepMs: 100 ] ].
-	self motorOff
+	self motorOff.
+	self mqttStatus: 'feed ' , anInteger asString , ' portions'
 ]
 
 { #category : #initialization }
@@ -200,6 +203,26 @@ AutoFeeder >> motorOn [
 	i2c write: #[0 253] to: 100
 ]
 
+{ #category : #networking }
+AutoFeeder >> mqtt: aTopic command: aString [
+	self print: 'command received'.
+	portion := aString asInteger
+]
+
+{ #category : #networking }
+AutoFeeder >> mqttStatus: aString [
+	| tm str |
+	tm := self now.
+	str := '{}/{}/{} {}:{}:{} ' format: tm unpack.
+	pub publish: MQTTStatus msg: str , aString
+]
+
+{ #category : #networking }
+AutoFeeder >> mqttSubscriber [
+	self print: 'subscriver start'.
+	[ pub waitMsg ] repeat
+]
+
 { #category : #api }
 AutoFeeder >> now [
 	^ time localtime: (time mktime: time localtime) + TZOFFSET
@@ -219,14 +242,28 @@ AutoFeeder >> opening [
 
 { #category : #api }
 AutoFeeder >> setup [
-	(i2c scan includes: 100)
-		ifFalse: [ self error: 'motor is not connected' ].
-	self motorOff.
 	self led: #(128 0 0).
 	self connectWifi.
 	ntptime settime.
+	self led: #(0 128 0).
+	self setupMqtt.
 	self led: #(0 0 128).
-	time sleep: 1
+	(i2c scan includes: 100)
+		ifFalse: [ self mqttStatus: 'motor is not connected'.
+			self error: 'motor is not connected' ].
+	self motorOff.
+	time sleep: 1.
+	self mqttStatus: 'start'
+]
+
+{ #category : #networking }
+AutoFeeder >> setupMqtt [
+	pub := MQTTClient initMqtt: self clientId ipaddr: MQTTSERVER.
+	pub connect.
+	"sub := MQTTClient initMqtt: self clientId ipaddr: MQTTSERVER."
+	pub setCallback: #mqtt:command: asFunctionName.
+	"sub connect."
+	pub subscribe: MQTTCommand
 ]
 
 { #category : #'top level' }
@@ -236,24 +273,6 @@ AutoFeeder >> start [
 	a := self class new.
 	a opening.
 	a setup.
-	_thread start: a main with: #().
-	a webServer
-]
-
-{ #category : #networking }
-AutoFeeder >> webServer [
-	| s ret conn request m response |
-	s := socket socket: #AF_INET stream: #SOCK_STREAM.
-	s bind: #('' 80).
-	s listen: 5.
-	[ ret := s accept.
-	conn := ret first.
-	request := (conn recv: 1024) asString asLowercase.
-	response := self defaultHtml.
-	m := re search: 'value=(\d*)' from: request.
-	m
-		ifNotNil: [ portion := (m group: 1) asInteger.
-			response := self executedHtml ].
-	conn send: response.
-	conn close ] repeat
+	_thread start: a mqttSubscriber with: #().
+	a main
 ]

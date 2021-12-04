@@ -13,6 +13,22 @@ AutoFeederTest >> mpCodeFor: aSymbol [
 ]
 
 { #category : #test }
+AutoFeederTest >> testClientId [
+	| r |
+	r := self mpCodeFor: #clientId.
+	self
+		assert: r
+		equals:
+			'import ubinascii,machine
+
+class AutoFeeder:
+	def client_id(self):
+		return ubinascii.hexlify(machine.unique_id())
+
+'
+]
+
+{ #category : #test }
 AutoFeederTest >> testConnectWifi [
 	| r |
 	r := self mpCodeFor: #connectWifi.
@@ -30,21 +46,6 @@ class AutoFeeder:
 			while not (a.isconnected()):
 				time.sleep_ms(100)
 		print(a.ifconfig())
-
-'
-]
-
-{ #category : #test }
-AutoFeederTest >> testDefaultHtml [
-	| r |
-	r := self mpCodeFor: #defaultHtml.
-	self
-		assert: r
-		equals:
-			'
-class AutoFeeder:
-	def default_html(self):
-		return ("<!DOCTYPE html><html><head><title>M5Atom Lite Auto Feeder</title></head>" + "<body><p><a href=\"?value=1\">feed 1 portion</a></p>") + "<p><a href=\"?value=2\">feed 2 portion</a></p></body></html>"
 
 '
 ]
@@ -71,29 +72,13 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testExecutedHtml [
-	| r |
-	r := self mpCodeFor: #executedHtml.
-	self
-		assert: r
-		equals:
-			'
-class AutoFeeder:
-	def executed_html(self):
-		return (((("<!DOCTYPE html><html><head><title>M5Atom Lite Auto Feeder</title></head>" + "<body><p>manual feed ") + (str(self.portion))) + " portions") + "</p>") + "<p><a href=\"/\">Home</a></p></body></html>"
-
-'
-]
-
-{ #category : #test }
 AutoFeederTest >> testFeedCount [
 	| r |
 	r := self mpCodeFor: #feedCount.
 	self
 		assert: r
 		equals:
-			'import ntptime
-
+			'
 class AutoFeeder:
 	def feed_count(self):
 		if self.portion > 0:
@@ -109,8 +94,6 @@ class AutoFeeder:
 			return 2
 		if (a == 18) and (b == 0):
 			return 4
-		if (a == 0) and (b == 0):
-			ntptime.settime()
 		return 0
 
 '
@@ -136,6 +119,7 @@ class AutoFeeder:
 			while is_feed_sw_on():
 				time.sleep_ms(100)
 		motor_off()
+		mqtt_status(("feed " + (str(a))) + " portions")
 
 '
 ]
@@ -277,6 +261,54 @@ class AutoFeeder:
 ]
 
 { #category : #test }
+AutoFeederTest >> testMqttCommand [
+	| r |
+	r := self mpCodeFor: #mqtt:command:.
+	self
+		assert: r
+		equals: '
+class AutoFeeder:
+	def mqtt_command(self,aTopic,a):
+		print("command received")
+		self.portion = int(a)
+
+'
+]
+
+{ #category : #test }
+AutoFeederTest >> testMqttStatus [
+	| r |
+	r := self mpCodeFor: #mqttStatus:.
+	self
+		assert: r
+		equals:
+			'
+class AutoFeeder:
+	def mqtt_status(self,a):
+		c = now()
+		b = "{}/{}/{} {}:{}:{} ".format(*c)
+		self.pub.publish("/home/autofeeder1/status",(b + a))
+
+'
+]
+
+{ #category : #test }
+AutoFeederTest >> testMqttSubscriber [
+	| r |
+	r := self mpCodeFor: #mqttSubscriber.
+	self
+		assert: r
+		equals: '
+class AutoFeeder:
+	def mqtt_subscriber(self):
+		print("subscriver start")
+		while True:
+			self.pub.wait_msg()
+
+'
+]
+
+{ #category : #test }
 AutoFeederTest >> testNow [
 	| r |
 	r := self mpCodeFor: #now.
@@ -323,14 +355,37 @@ AutoFeederTest >> testSetup [
 
 class AutoFeeder:
 	def setup(self):
-		if not (100 in (self.i2c.scan())):
-			error("motor is not connected")
-		motor_off()
 		led((128,0,0))
 		connect_wifi()
 		ntptime.settime()
+		led((0,128,0))
+		setup_mqtt()
 		led((0,0,128))
+		if not (100 in (self.i2c.scan())):
+			mqtt_status("motor is not connected")
+			error("motor is not connected")
+		motor_off()
 		time.sleep(1)
+		mqtt_status("start")
+
+'
+]
+
+{ #category : #test }
+AutoFeederTest >> testSetupMqtt [
+	| r |
+	r := self mpCodeFor: #setupMqtt.
+	self
+		assert: r
+		equals:
+			'from umqtt.robust import MQTTClient
+
+class AutoFeeder:
+	def setup_mqtt(self):
+		self.pub = MQTTClient((client_id()),"219.94.240.178")
+		self.pub.connect()
+		self.pub.set_callback(mqtt_command)
+		self.pub.subscribe("/home/autofeeder1/command")
 
 '
 ]
@@ -347,36 +402,7 @@ AutoFeederTest >> testStart [
 a = AutoFeeder()
 a.opening()
 a.setup()
-_thread.start_new_thread(a.main,())
-a.web_server()
-'
-]
-
-{ #category : #test }
-AutoFeederTest >> testWebServer [
-	| r |
-	r := self mpCodeFor: #webServer.
-	self
-		assert: r
-		equals:
-			'import re,socket
-
-class AutoFeeder:
-	def web_server(self):
-		s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-		s.bind(("",80))
-		s.listen(5)
-		while True:
-			d = s.accept()
-			a = d[0]
-			b = (str((a.recv(1024)))).lower()
-			c = default_html()
-			m = re.search("value=(\d*)",b)
-			if m != None:
-				self.portion = int((m.group(1)))
-				c = executed_html()
-			a.send(c)
-			a.close()
-
+_thread.start_new_thread(a.mqtt_subscriber,())
+a.main()
 '
 ]

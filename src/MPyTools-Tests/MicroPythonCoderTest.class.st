@@ -251,6 +251,8 @@ MicroPythonCoderTest >> testGenerateAsFunctionNameOnIndent [
 	n1 := TrConstantNode new value: #testCase.
 	n2 := TrSendNode new receiver: n1.
 	c := self newCoder.
+	c addClass: AutoFeeder.
+	c targetClass: AutoFeeder.
 	c generateAsFunctionName: n2 on: s indent: 0.
 	self assert: s contents equals: 'test_case'
 ]
@@ -329,6 +331,21 @@ MicroPythonCoderTest >> testGenerateAtPutOnIndent [
 	c := self newCoder.
 	c generateAtPut: n4 on: s indent: 0.
 	self assert: s contents equals: 'x[5] = True'
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testGenerateBetweenAndOnIndent [
+	| c n1 n2 n3 n4 s |
+	s := WriteStream on: String new.
+	n1 := TrVariableNode new name: 'x'.
+	n2 := TrConstantNode new value: 5.
+	n3 := TrConstantNode new value: 6.
+	n4 := TrSendNode new
+		receiver: n1;
+		arguments: {n2. n3}.
+	c := self newCoder.
+	c generateBetweenAnd: n4 on: s indent: 0.
+	self assert: s contents equals: '5<=x<=6'
 ]
 
 { #category : #test }
@@ -454,6 +471,21 @@ MicroPythonCoderTest >> testGenerateConditionalIfThenElseOnIndent [
 ]
 
 { #category : #test }
+MicroPythonCoderTest >> testGenerateCopyFromToOnIndent [
+	| c n1 n2 n3 n4 s |
+	s := WriteStream on: String new.
+	n1 := TrVariableNode new name: 'x'.
+	n2 := TrConstantNode new value: 5.
+	n3 := TrConstantNode new value: 6.
+	n4 := TrSendNode new
+		receiver: n1;
+		arguments: {n2. n3}.
+	c := self newCoder.
+	c generateCopyFromTo: n4 on: s indent: 0.
+	self assert: s contents equals: 'x[5:6+1]'
+]
+
+{ #category : #test }
 MicroPythonCoderTest >> testGenerateDivideOnIndent [
 	| c n1 n2 n3 s |
 	s := WriteStream on: String new.
@@ -463,6 +495,29 @@ MicroPythonCoderTest >> testGenerateDivideOnIndent [
 	c := self newCoder.
 	c generateDivide: n3 on: s indent: 0.
 	self assert: s contents equals: 'a / 3'
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testGenerateDoOnIndent [
+	| c n1 n2 n3 n4 n5 s |
+	s := ReadWriteStream on: String new.
+	n1 := TrConstantNode new value: 2.
+	n2 := TrConstantNode new value: 5.
+	n3 := TrVariableNode new name: 'a'.
+	n4 := TrStatementListNode new
+		statements: {n3};
+		arguments: #(b).
+	n5 := TrSendNode new
+		receiver: n1;
+		arguments:
+			{n2.
+			n4}.
+	c := self newCoder.
+	c generateToDo: n5 on: s indent: 0.
+	self
+		assert: s contents
+		equals:
+			'for b in range(2,5+1):' , String cr , String tab , 'a'
 ]
 
 { #category : #test }
@@ -501,6 +556,21 @@ MicroPythonCoderTest >> testGenerateFirstOnIndent [
 	c := self newCoder.
 	c generateFirst: n2 on: s indent: 0.
 	self assert: s contents equals: 'x[0]'
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testGenerateFormatOnIndent [
+	| c n1 n2 n3 n4 s |
+	s := WriteStream on: String new.
+	n1 := TrConstantNode new value: 'test{}'.
+	n2 := TrVariableNode new name: 'x'.
+	n3 := TrConstantNode new value: 6.
+	n4 := TrSendNode new
+		receiver: n1;
+		arguments: {n2. n3}.
+	c := self newCoder.
+	c generateFormat: n4 on: s indent: 0.
+	self assert: s contents equals: '"test{}".format(x,6)'
 ]
 
 { #category : #test }
@@ -899,6 +969,17 @@ MicroPythonCoderTest >> testGenerateInlineDirectiveOnIndent [
 ]
 
 { #category : #test }
+MicroPythonCoderTest >> testGenerateIsEmptyOnIndent [
+	| c s n1 n2 |
+	c := self newCoder.
+	n1 := TrVariableNode new name: 'x'.
+	n2 := TrSendNode new receiver: n1.
+	s := WriteStream on: String new.
+	c generateIsEmpty: n2 on: s indent: 0.
+	self assert: s contents equals: 'len(x)==0'
+]
+
+{ #category : #test }
 MicroPythonCoderTest >> testGenerateIsNilOnIndent [
 	| c n1 n2 s |
 	s := WriteStream on: String new.
@@ -920,6 +1001,17 @@ MicroPythonCoderTest >> testGenerateLastOnIndent [
 	c := self newCoder.
 	c generateLast: n2 on: s indent: 0.
 	self assert: s contents equals: 'x[-1]'
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testGenerateLenOnIndent [
+	| c s n1 n2 |
+	c := self newCoder.
+	n1 := TrVariableNode new name: 'x'.
+	n2 := TrSendNode new receiver: n1.
+	s := WriteStream on: String new.
+	c generateLen: n2 on: s indent: 0.
+	self assert: s contents equals: 'len(x)'
 ]
 
 { #category : #test }
@@ -1019,7 +1111,13 @@ MicroPythonCoderTest >> testGenerateNewOnIndent [
 	n2 := TrSendNode new receiver: n1.
 	s := WriteStream on: String new.
 	c generateNew: n2 on: s indent: 0.
-	self assert: s contents equals: 'a()'
+	self assert: s contents equals: 'a()'.
+	c := self newCoder.
+	n1 := TrVariableNode new name: 'OrderedCollection'.
+	n2 := TrSendNode new receiver: n1.
+	s := WriteStream on: String new.
+	c generateNew: n2 on: s indent: 0.
+	self assert: s contents equals: '[]'
 ]
 
 { #category : #test }
@@ -1349,6 +1447,17 @@ MicroPythonCoderTest >> testGenerateToDoOnIndent [
 		assert: s contents
 		equals:
 			'for b in range(2,5+1):' , String cr , String tab , 'a'
+]
+
+{ #category : #test }
+MicroPythonCoderTest >> testGenerateUnpackOnIndent [
+	| c s n1 n2 |
+	c := self newCoder.
+	n1 := TrVariableNode new name: 'a'.
+	n2 := TrSendNode new receiver: n1.
+	s := WriteStream on: String new.
+	c generateUnpack: n2 on: s indent: 0.
+	self assert: s contents equals: '*a'
 ]
 
 { #category : #test }

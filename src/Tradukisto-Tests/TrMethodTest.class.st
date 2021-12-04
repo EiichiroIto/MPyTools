@@ -171,6 +171,13 @@ TrMethodTest >> testIsFunctional [
 ]
 
 { #category : #test }
+TrMethodTest >> testIsMethod [
+	| m |
+	m := self newMethod.
+	self assert: m isMethod
+]
+
+{ #category : #test }
 TrMethodTest >> testLocals [
 	| m a |
 	m := self newMethod.

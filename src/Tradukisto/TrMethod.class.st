@@ -249,6 +249,11 @@ TrMethod >> isFunctional [
 	^ true
 ]
 
+{ #category : #testing }
+TrMethod >> isMethod [
+	^ true
+]
+
 { #category : #accessing }
 TrMethod >> locals [
 	^ locals

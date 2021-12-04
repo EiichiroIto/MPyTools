@@ -358,6 +358,8 @@ MicroPythonCoder >> generateAsFunctionName: aNode on: aStream indent: anInteger 
 	(aNode receiver isConstant and: [ aNode receiver value isSymbol ])
 		ifFalse: [ self error ].
 	selector := aNode receiver value.
+	(self trClass isMethod: selector)
+		ifTrue: [ aStream nextPutAll: 'self.' ].
 	aStream nextPutAll: (self functionNameFor: selector)
 ]
 
@@ -399,6 +401,15 @@ MicroPythonCoder >> generateAtPut: aNode on: aStream indent: anInteger [
 	aNode arguments first emitCode: self on: aStream indent: anInteger.
 	aStream nextPutAll: '] = '.
 	self emitExpression: aNode arguments last on: aStream
+]
+
+{ #category : #translation }
+MicroPythonCoder >> generateBetweenAnd: aNode on: aStream indent: anInteger [ 
+	aNode arguments first emitCode: self on: aStream indent: anInteger.
+	aStream nextPutAll: '<='.
+	self emitExpression: aNode receiver on: aStream.
+	aStream nextPutAll: '<='.
+	aNode arguments last emitCode: self on: aStream indent: anInteger
 ]
 
 { #category : #translation }
@@ -476,10 +487,41 @@ MicroPythonCoder >> generateConditionalIf: aNode then: aNode2 else: aNode3 on: a
 ]
 
 { #category : #translation }
+MicroPythonCoder >> generateCopyFromTo: aNode on: aStream indent: anInteger [ 
+	self emitExpression: aNode receiver on: aStream.
+	aStream nextPut: $[.
+	aNode arguments first emitCode: self on: aStream indent: anInteger.
+	aStream nextPut: $:.
+	aNode arguments last emitCode: self on: aStream indent: anInteger.
+	aStream nextPutAll: '+1]'
+]
+
+{ #category : #translation }
 MicroPythonCoder >> generateDivide: aNode on: aStream indent: anInteger [ 
 	self emitExpression: aNode receiver on: aStream.
 	aStream nextPutAll: ' / '.
 	self emitExpression: aNode arguments first on: aStream
+]
+
+{ #category : #translation }
+MicroPythonCoder >> generateDo: aNode on: aStream indent: anInteger [
+	| block var |
+	block := aNode arguments first.
+	(block isStatementList and: [ block arguments size = 1 ])
+		ifFalse: [ self error ].
+	var := block arguments first.
+	aStream
+		nextPutAll: 'for ';
+		nextPutAll: var;
+		nextPutAll: ' in '.
+	self emitExpression: aNode receiver on: aStream.
+	aStream
+		nextPut: $:;
+		cr.
+	aNode arguments first
+		emitCode: self
+		on: aStream
+		indent: anInteger + 1
 ]
 
 { #category : #translation }
@@ -499,6 +541,16 @@ MicroPythonCoder >> generateFifth: msgNode on: aStream indent: level [
 MicroPythonCoder >> generateFirst: msgNode on: aStream indent: level [
 	self emitExpression: msgNode receiver on: aStream.
 	aStream nextPutAll: '[0]'
+]
+
+{ #category : #translation }
+MicroPythonCoder >> generateFormat: aNode on: aStream indent: level [
+	self emitExpression: aNode receiver on: aStream.
+	aStream nextPutAll: '.format('.
+	aNode arguments
+		do: [ :each | each emitCode: self on: aStream indent: 0 ]
+		separatedBy: [ aStream nextPut: $, ].
+	aStream nextPut: $)
 ]
 
 { #category : #translation }
@@ -666,6 +718,13 @@ MicroPythonCoder >> generateInlineDirective: aNode on: aStream indent: level [
 ]
 
 { #category : #translation }
+MicroPythonCoder >> generateIsEmpty: msgNode on: aStream indent: level [
+	aStream nextPutAll: 'len('.
+	self emitExpression: msgNode receiver on: aStream.
+	aStream nextPutAll: ')==0'
+]
+
+{ #category : #translation }
 MicroPythonCoder >> generateIsNil: aNode on: aStream indent: anInteger [ 
 	self emitExpression: aNode receiver on: aStream.
 	aStream
@@ -677,6 +736,13 @@ MicroPythonCoder >> generateIsNil: aNode on: aStream indent: anInteger [
 MicroPythonCoder >> generateLast: msgNode on: aStream indent: level [
 	self emitExpression: msgNode receiver on: aStream.
 	aStream nextPutAll: '[-1]'
+]
+
+{ #category : #translation }
+MicroPythonCoder >> generateLen: msgNode on: aStream indent: level [
+	aStream nextPutAll: 'len('.
+	self emitExpression: msgNode receiver on: aStream.
+	aStream nextPut: $)
 ]
 
 { #category : #translation }
@@ -733,6 +799,11 @@ MicroPythonCoder >> generateNegated: msgNode on: aStream indent: level [
 
 { #category : #translation }
 MicroPythonCoder >> generateNew: aNode on: aStream indent: anInteger [
+	| r |
+	r := aNode receiver.
+	(r isVariable and: [ r name = 'OrderedCollection' ])
+		ifTrue: [ aStream nextPutAll: '[]'.
+			^ self ].
 	self emitExpression: aNode receiver on: aStream.
 	aStream nextPutAll: '()'
 ]
@@ -934,6 +1005,12 @@ MicroPythonCoder >> generateToDo: aNode on: aStream indent: anInteger [
 ]
 
 { #category : #translation }
+MicroPythonCoder >> generateUnpack: msgNode on: aStream indent: level [
+	aStream nextPutAll: '*'.
+	self emitExpression: msgNode receiver on: aStream
+]
+
+{ #category : #translation }
 MicroPythonCoder >> generateWhileFalse: aNode on: aStream indent: anInteger [
 	aStream nextPutAll: 'while not ('.
 	self emitTestBlock: aNode receiver on: aStream.
@@ -1052,6 +1129,7 @@ MicroPythonCoder >> simpleTranslationPair [
 	^ #(
 	#asLowercase #lower
 	#search:from: #search
+	#add: #append
 		)
 ]
 
@@ -1077,6 +1155,11 @@ MicroPythonCoder >> stringLiteralFor: aString [
 ]
 
 { #category : #private }
+MicroPythonCoder >> trClass [
+	^ self classNamed: targetClass name
+]
+
+{ #category : #private }
 MicroPythonCoder >> translationPair [
 	^ super translationPair
 		,
@@ -1088,6 +1171,7 @@ MicroPythonCoder >> translationPair [
 	#repeat #generateRepeat:on:indent:
 	#timesRepeat: #generateTimesRepeat:on:indent:
 	#asTuple #generateAsTuple:on:indent:
+	#asOrderedCollection #generateAsCollection:on:indent:
 	#asCollection #generateAsCollection:on:indent:
 	#asString #generateAsString:on:indent:
 	#asByteArray #generateAsByteArray:on:indent:
@@ -1111,6 +1195,13 @@ MicroPythonCoder >> translationPair [
 	#abs #generateAbs:on:indent:
 	#class #generateClass:on:indent:
 	#negated #generateNegated:on:indent:
+	#copyFrom:to: #generateCopyFromTo:on:indent:
+	#between:and: #generateBetweenAnd:on:indent:
+	#do: #generateDo:on:indent:
+	#size #generateLen:on:indent:
+	#isEmpty #generateIsEmpty:on:indent:
+	#unpack #generateUnpack:on:indent:
+	#format: #generateFormat:on:indent:
 			)
 ]
 

@@ -152,3 +152,8 @@ MicroPythonBase >> ticksMs [
 MicroPythonBase >> ticksUs [
 	self shouldBeImplemented
 ]
+
+{ #category : #misc }
+MicroPythonBase >> unpack [
+	self shouldBeImplemented
+]

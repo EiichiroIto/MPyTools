@@ -87,6 +87,13 @@ TrClass >> initialize [
 	methods := Dictionary new: 500
 ]
 
+{ #category : #testing }
+TrClass >> isMethod: aSymbol [
+	| m |
+	m := methods at: aSymbol ifAbsent: [ ^ false ].
+	^ m isMethod
+]
+
 { #category : #api }
 TrClass >> methodNamed: selector [
 	"Answer the method in the code base with the given selector."

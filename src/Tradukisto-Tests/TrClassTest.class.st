@@ -75,6 +75,18 @@ TrClassTest >> testInitialize [
 ]
 
 { #category : #test }
+TrClassTest >> testIsMethod [
+	| c m |
+	c := self newClass.
+	self deny: (c isMethod: #abs:).
+	m := TrMethod new
+		setupFrom: self fooBarAbs;
+		yourself.
+	c addMethod: m.
+	self assert: (c isMethod: #abs:)
+]
+
+{ #category : #test }
 TrClassTest >> testMethodNamed [
 	| c m |
 	c := self newClass.

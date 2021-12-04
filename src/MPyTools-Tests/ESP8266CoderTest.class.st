@@ -61,7 +61,7 @@ ESP8266CoderTest >> testEmitBuiltinConstructForOnIndent [
 	n3 := TrConstantNode new value: 'message'.
 	n4 := TrSendNode new
 		receiver: n1;
-		selector: #publish:message:;
+		selector: #publish:msg:;
 		arguments:
 			{n2.
 			n3}.

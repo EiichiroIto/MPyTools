@@ -4,7 +4,7 @@ A ReceiveQueueTest is a test class for testing the behavior of ReceiveQueue
 Class {
 	#name : #ReceiveQueueTest,
 	#superclass : #TestCase,
-	#category : #'MPyTools-Tests'
+	#category : #'MicroPythonProxy-Tests'
 }
 
 { #category : #private }

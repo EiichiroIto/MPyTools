@@ -72,7 +72,7 @@ TrAssignmentNode >> isVariableUpdatingAssignment [
 	(expression isSend and: [ expression receiver isVariable ])
 		ifFalse: [ ^ false ].
 	^ expression receiver name = variable name
-		and: [ #(#+ #-) includes: expression selector ]
+		and: [ #(#+ #-) includes: expression selector value ]
 ]
 
 { #category : #enumerating }

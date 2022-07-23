@@ -137,7 +137,7 @@ TrCaseStatementNode >> expression: aNode selectors: selectorList [
 				ifTrue: [ firsts add: firstInRun.
 					lasts add: i - 2.
 					stmt := TrSendNode new
-						selector: lastSel;
+						selector: lastSel value;
 						receiver: selfNode;
 						arguments: #().
 					cases
@@ -150,7 +150,7 @@ TrCaseStatementNode >> expression: aNode selectors: selectorList [
 	firsts add: firstInRun.
 	lasts add: selectorList size - 1.
 	stmt := TrSendNode new
-		selector: lastSel;
+		selector: lastSel value;
 		receiver: selfNode;
 		arguments: #().
 	cases
@@ -188,7 +188,7 @@ when they differed.  There should at least be a test here."
 					oldStmts
 						withIndexDo: [ :stmt :i | 
 							copying
-								ifTrue: [ (stmt isSend and: [ stmt selector = #sharedCodeNamed:inCase: ])
+								ifTrue: [ (stmt isSend and: [ stmt selector value = #sharedCodeNamed:inCase: ])
 										ifTrue: [ newStmts
 												ifNil: [ newStmts := (oldStmts copyFrom: 1 to: i - 1) asOrderedCollection ]
 												ifNotNil: [ newStmts removeLast	"preserve any prior shared entry points - di" ].

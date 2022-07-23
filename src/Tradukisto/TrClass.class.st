@@ -30,7 +30,7 @@ TrClass >> addClassVarsFor: aClass [
 TrClass >> addMethod: aMethod [
 	"Add the given method to the code base."
 
-	(methods includesKey: aMethod selector)
+	(methods includesKey: aMethod selector value)
 		ifTrue: [ self error: 'Method name conflict: ' , aMethod selector ].
 	methods at: aMethod selector put: aMethod.
 	aMethod trClass: self
@@ -112,7 +112,7 @@ TrClass >> methodsOf: aBlockOrSymbol [
 	list := methods values.
 	list := list select: aBlockOrSymbol.
 	list := list
-		asSortedCollection: [ :m1 :m2 | m1 selector < m2 selector ].
+		asSortedCollection: [ :m1 :m2 | m1 selector value < m2 selector value ].
 	^ list
 ]
 
@@ -170,7 +170,7 @@ TrClass >> removeAssertions [
 	methods
 		do: [ :m | 
 			m isAssertion
-				ifFalse: [ newMethods at: m selector put: m.
+				ifFalse: [ newMethods at: m selector value put: m.
 					m removeAssertions ] ].
 	methods := newMethods
 ]

@@ -13,7 +13,7 @@ TrNode >> allCalls [
 	self
 		nodesDo: [ :node | 
 			node isSend
-				ifTrue: [ calls add: node selector ] ].
+				ifTrue: [ calls add: node selector value ] ].
 	^ calls
 ]
 

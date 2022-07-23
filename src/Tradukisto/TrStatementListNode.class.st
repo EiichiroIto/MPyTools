@@ -59,7 +59,7 @@ TrStatementListNode >> isCascadingIf [
 	s := statements first.
 	s isSend
 		ifFalse: [ ^ false ].
-	^ s selector = #ifTrue:ifFalse:
+	^ s selector value = #ifTrue:ifFalse:
 ]
 
 { #category : #testing }

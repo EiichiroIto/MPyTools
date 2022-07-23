@@ -190,7 +190,7 @@ TrMethod >> extractDirective: aSymbol [
 	newStatements := OrderedCollection new: body statements size.
 	body statements
 		do: [ :stmt | 
-			(stmt isSend and: [ stmt selector = aSymbol ])
+			(stmt isSend and: [ stmt selector value = aSymbol ])
 				ifTrue: [ result := stmt arguments first value ]
 				ifFalse: [ newStatements add: stmt ] ].
 	body statements: newStatements asArray.
@@ -294,7 +294,7 @@ TrMethod >> prepareMethodIn: aCodeGen [
 		nodesDo: [ :node | 
 			node isSend
 				ifTrue: [ "record sends of builtin operators"
-					(aCodeGen builtin: node selector)
+					(aCodeGen builtin: node selector value)
 						ifTrue: [ node isBuiltinOperator: true ] ].
 			node isStatementList
 				ifTrue: [ "replace dispatchOn:in: with case statement node"
@@ -307,8 +307,10 @@ TrMethod >> prepareMethodIn: aCodeGen [
 
 { #category : #printing }
 TrMethod >> printOn: aStream [
+
 	aStream
-		nextPutAll: 'TrMethod(';
+		nextPutAll: self class name;
+		nextPut: $(;
 		nextPutAll: selector;
 		nextPut: $)
 ]
@@ -393,7 +395,7 @@ TrMethod >> setup [
 
 { #category : #api }
 TrMethod >> setupFrom: aMethod [
-	selector := aMethod selector.
+	selector := aMethod selector value.
 	arguments := aMethod argumentNames.
 	locals := aMethod body allDefinedVariables removeDuplicates.
 	body := aMethod body asTranslatorNode

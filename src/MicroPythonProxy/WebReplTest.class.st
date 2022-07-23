@@ -4,7 +4,7 @@ A WebReplTest is a test class for testing the behavior of WebRepl
 Class {
 	#name : #WebReplTest,
 	#superclass : #TestCase,
-	#category : #'MPyTools-Tests'
+	#category : #'MicroPythonProxy-Tests'
 }
 
 { #category : #private }
@@ -141,23 +141,6 @@ WebReplTest >> testMakeHeaderOfSizeAsText [
 ]
 
 { #category : #test }
-WebReplTest >> testOptions [
-	| c |
-	c := self newComm.
-	self assert: c options isArray.
-	self assert: c options notEmpty
-]
-
-{ #category : #test }
-WebReplTest >> testOptionsNamed [
-	| c |
-	c := self newComm.
-	self assert: (c optionsNamed: #address) isNil.
-	c address: 'abc'.
-	self assert: (c optionsNamed: #address) equals: 'abc'
-]
-
-{ #category : #test }
 WebReplTest >> testPrintOn [
 	| c s |
 	c := self newComm.
@@ -186,15 +169,6 @@ WebReplTest >> testRetrieveDataFrom [
 	self assert: r first equals: 97.
 	self assertCollection: r second equals: #[1 1 1 1 1 1 1 1 1].
 	self assertCollection: r third equals: #[2 3 4]
-]
-
-{ #category : #test }
-WebReplTest >> testSetOptionTo [
-	| c |
-	c := self newComm.
-	self assert: c address isNil.
-	c setOption: #address to: 'abc'.
-	self assert: c address equals: 'abc'
 ]
 
 { #category : #test }

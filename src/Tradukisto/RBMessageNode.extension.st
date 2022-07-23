@@ -19,7 +19,7 @@ RBMessageNode >> asTranslatorNode [
 		ifTrue:
 			[ "Restore argument block that got moved by transformIfFalse:" args at: 1 put: (arguments at: 2) asTranslatorNode ].
 	^ TrSendNode new
-		selector: selector;
+		selector: selector value;
 		receiver: (receiver ifNil: [ nil ] ifNotNil: [ receiver asTranslatorNode ]);
 		arguments: args;
 		yourself

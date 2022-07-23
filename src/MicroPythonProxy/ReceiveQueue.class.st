@@ -8,7 +8,7 @@ Class {
 		'timeout',
 		'delimiters'
 	],
-	#category : #'MPyTools-Comm'
+	#category : #'MicroPythonProxy-Comm'
 }
 
 { #category : #api }
@@ -73,6 +73,11 @@ ReceiveQueue >> lineCount [
 { #category : #accessing }
 ReceiveQueue >> pending [
 	^ pending
+]
+
+{ #category : #accessing }
+ReceiveQueue >> pending: aCollection [
+	pending := aCollection asOrderedCollection
 ]
 
 { #category : #printing }

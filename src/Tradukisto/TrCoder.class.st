@@ -90,7 +90,7 @@ TrCoder >> emitBuiltinConstructFor: msgNode on: aStream indent: level [
 	"If the given selector is in the translation dictionary, translate it into a target code construct and return true. Otherwise, do nothing and return false."
 
 	| action |
-	action := translationDict at: msgNode selector ifAbsent: [ ^ false ].
+	action := translationDict at: msgNode selector value ifAbsent: [ ^ false ].
 	self
 		perform: action
 		with: msgNode
@@ -138,7 +138,7 @@ TrCoder >> emitMethod: aTrMethod on: aStream indent: anInteger [
 TrCoder >> emitMethods: aClass on: aStream indent: anInteger [
 	| methods |
 	methods := aClass methods
-		asSortedCollection: [ :m1 :m2 | m1 selector < m2 selector ].
+		asSortedCollection: [ :m1 :m2 | m1 selector value < m2 selector value ].
 	methods do: [ :m | self emitMethod: m on: aStream indent: anInteger ]
 ]
 

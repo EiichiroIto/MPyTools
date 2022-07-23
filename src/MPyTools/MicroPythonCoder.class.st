@@ -79,7 +79,7 @@ MicroPythonCoder >> codeString [
 
 { #category : #api }
 MicroPythonCoder >> codeStringFromCompiledMethod: aCompiledMethod [
-	self addClass: aCompiledMethod classBinding value methodSelector: aCompiledMethod selector.
+	self addClass: aCompiledMethod classBinding value methodSelector: aCompiledMethod selector value.
 	^ self codeString
 ]
 
@@ -109,9 +109,9 @@ MicroPythonCoder >> emitAssignment: aNode on: aStream indent: anInteger [
 MicroPythonCoder >> emitBuiltinConstructFor: msgNode on: aStream indent: level [
 	| selector |
 	selector := simpleTranslationDict
-		at: msgNode selector
+		at: msgNode selector value
 		ifAbsent: [ ^ super emitBuiltinConstructFor: msgNode on: aStream indent: level ].
-	self generateFunction: selector node: msgNode on: aStream indent: level.
+	self generateFunction: selector value node: msgNode on: aStream indent: level.
 	^ true
 ]
 
@@ -153,7 +153,7 @@ MicroPythonCoder >> emitFunctionHeader: aMethod on: aStream indent: anInteger [
 	self emitIndentLevel: anInteger on: aStream.
 	aStream
 		nextPutAll: 'def ';
-		nextPutAll: (self functionNameFor: aMethod selector);
+		nextPutAll: (self functionNameFor: aMethod selector value);
 		nextPut: $(.
 	aMethod arguments
 		do: [ :arg | aStream nextPutAll: arg ]
@@ -210,13 +210,13 @@ MicroPythonCoder >> emitMessageHeader: aNode on: aStream indent: level [
 	aNode receiver isVariable
 		ifTrue: [ 'self' = aNode receiver name
 				ifTrue:
-					[ m := (self classNamed: targetClass name) methodNamed: aNode selector.
+					[ m := (self classNamed: targetClass name) methodNamed: aNode selector value.
 					(m notNil
 						and: [ m isMethod and: [ targetMethod isTopLevel not ] ])
 						ifTrue: [ aStream nextPutAll: 'self.' ] ]
 				ifFalse: [ aNode receiver emitCode: self on: aStream indent: level.
 					aStream nextPut: $. ] ].
-	aStream nextPutAll: (self functionNameFor: aNode selector)
+	aStream nextPutAll: (self functionNameFor: aNode selector value)
 ]
 
 { #category : #'code generation' }
@@ -244,7 +244,7 @@ MicroPythonCoder >> emitMethodHeader: aMethod on: aStream indent: anInteger [
 	self emitIndentLevel: anInteger on: aStream.
 	aStream
 		nextPutAll: 'def ';
-		nextPutAll: (self functionNameFor: aMethod selector);
+		nextPutAll: (self functionNameFor: aMethod selector value);
 		nextPut: $(.
 	aStream nextPutAll: 'self'.
 	aMethod arguments notEmpty
@@ -1059,7 +1059,7 @@ MicroPythonCoder >> isExternalSend: aNode [
 		ifFalse: [ ^ false ].
 	(Smalltalk globals includesKey: recv name)
 		ifFalse: [ ^ false ].
-	^ #(new basicNew) includes: aNode selector
+	^ #(new basicNew) includes: aNode selector value
 ]
 
 { #category : #testing }
@@ -1072,7 +1072,7 @@ MicroPythonCoder >> isInternalInitializer: aNode [
 		ifFalse: [ ^ false ].
 	(targetClass base classVarNames includes: recv name)
 		ifFalse: [ ^ false ].
-	^ aNode selector beginsWith: 'init'
+	^ aNode selector value beginsWith: 'init'
 ]
 
 { #category : #utilities }

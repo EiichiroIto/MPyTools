@@ -1,6 +1,6 @@
 Class {
 	#name : #WebRepl,
-	#superclass : #Object,
+	#superclass : #MWComm,
 	#instVars : [
 		'address',
 		'buffer',
@@ -10,7 +10,7 @@ Class {
 	#classVars : [
 		'RecentAddresses'
 	],
-	#category : #'MPyTools-Comm'
+	#category : #'MicroPythonProxy-Comm'
 }
 
 { #category : #accessing }
@@ -201,20 +201,6 @@ WebRepl >> open [
 	^ true
 ]
 
-{ #category : #accessing }
-WebRepl >> options [
-	^ #(address addresses)
-]
-
-{ #category : #accessing }
-WebRepl >> optionsNamed: aSymbol [
-	aSymbol = #address
-		ifTrue: [ ^ address ].
-	aSymbol = #addresses
-		ifTrue: [ ^ RecentAddresses ].
-	^ #()
-]
-
 { #category : #printing }
 WebRepl >> printOn: aStream [
 	aStream
@@ -255,6 +241,11 @@ WebRepl >> putFileNamed: aString1 contents: aString2 [
 			self put: buf asText: false ]
 ]
 
+{ #category : #accessing }
+WebRepl >> recentAddresses [
+	^ RecentAddresses
+]
+
 { #category : #private }
 WebRepl >> retrieveDataFrom: aByteArray [
 	| opcode size pos |
@@ -271,12 +262,6 @@ WebRepl >> retrieveDataFrom: aByteArray [
 	^ {opcode.
 	(aByteArray copyFrom: pos to: pos + size - 1).
 	(aByteArray copyFrom: pos + size to: aByteArray size)}
-]
-
-{ #category : #accessing }
-WebRepl >> setOption: aString to: anObject [
-	aString = #address
-		ifTrue: [ ^ address := anObject asString ]
 ]
 
 { #category : #private }

@@ -1,11 +1,13 @@
-"
-A MPyToolTest is a test class for testing the behavior of MPyTool
-"
 Class {
 	#name : #MPyToolTest,
 	#superclass : #TestCase,
 	#category : #'MPyTools-Tests'
 }
+
+{ #category : #private }
+MPyToolTest >> newComm [
+	^ DummyComm new
+]
 
 { #category : #private }
 MPyToolTest >> newTool [
@@ -14,12 +16,15 @@ MPyToolTest >> newTool [
 
 { #category : #test }
 MPyToolTest >> testAutoClose [
+
 	| t c |
 	t := self newTool.
-	c := DummyComm new.
+	c := self newComm.
 	t proxy comm: c.
 	self deny: c isConnected.
-	c isConnected: true.
+	t proxy
+		portName: 'dummy';
+		open.
 	self assert: c isConnected.
 	t autoClose.
 	self deny: c isConnected.
@@ -27,27 +32,6 @@ MPyToolTest >> testAutoClose [
 	c isConnected: true.
 	t autoClose.
 	self assert: c isConnected
-]
-
-{ #category : #test }
-MPyToolTest >> testAutoOpen [
-	| t c ret |
-	t := self newTool.
-	self should: [ t autoOpen ] raise: Error.
-	c := DummyComm new.
-	t proxy comm: c.
-	self deny: t isConnected.
-	c whenPutDo: [ c sends add: '>>> ' asByteArray ].
-	t autoOpen.
-	self assert: t isConnected.
-	ret := c receives.
-	self assert: ret size equals: 1.
-	self assertCollection: ret first equals: #[3]
-]
-
-{ #category : #test }
-MPyToolTest >> testBreak [
-	self testAutoOpen
 ]
 
 { #category : #test }
@@ -73,25 +57,10 @@ MPyToolTest >> testDefaultBaudRate [
 ]
 
 { #category : #test }
-MPyToolTest >> testDisableCloseDo [
-	| t c |
-	t := self newTool.
-	c := DummyComm new.
-	t proxy comm: c.
-	c isConnected: true.
-	t closeConnection: true.
-	t autoClose.
-	self deny: c isConnected.
-	c isConnected: true.
-	t disableCloseDo: [ t autoClose ].
-	self assert: c isConnected
-]
-
-{ #category : #test }
 MPyToolTest >> testInitialize [
 	| t |
 	t := self newTool.
-	self assert: (t proxy isKindOf: MPyProxy).
+	self assert: (t proxy isKindOf: MicroPythonProxy).
 	self deny: t showProgress
 ]
 
@@ -100,10 +69,12 @@ MPyToolTest >> testIsConnected [
 	| t c |
 	t := self newTool.
 	self deny: t isConnected.
-	c := DummyComm new.
+	c := self newComm.
 	t proxy comm: c.
 	self deny: t isConnected.
-	c open.
+	t proxy
+		portName: 'dummy';
+		open.
 	self assert: t isConnected.
 	t close.
 	self deny: t isConnected
@@ -113,7 +84,7 @@ MPyToolTest >> testIsConnected [
 MPyToolTest >> testProxy [
 	| t |
 	t := self newTool.
-	self assert: (t proxy isKindOf: MPyProxy).
+	self assert: (t proxy isKindOf: MicroPythonProxy).
 	t proxy: nil.
 	self assert: t proxy isNil
 ]

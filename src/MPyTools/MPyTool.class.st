@@ -11,217 +11,196 @@ Class {
 
 { #category : #private }
 MPyTool >> autoClose [
+
 	closeConnection ifTrue: [ self close ]
 ]
 
 { #category : #private }
-MPyTool >> autoOpen [
-	self privAutoOpen
-		ifFalse: [ ^ self ].
-	^ proxy break
+MPyTool >> autoConnectIfFail: aBlock [
+
+	proxy isReady ifTrue: [ ^ self ]. 
+	self connectIfFail: aBlock.
+	proxy break.
+	proxy waitPromptIfError: aBlock
 ]
 
 { #category : #api }
 MPyTool >> break [
-	^ self autoOpen
+
+	proxy isIdle ifTrue: [ ^ self ].
+	proxy isNotConnected ifTrue: [ 
+		proxy open ifFalse: [ 
+			self error: 'cannot open:' localized , proxy comm portName ] ].
+	proxy break.
+	proxy waitPromptIfError: [ :text | self error: text ]
 ]
 
 { #category : #api }
 MPyTool >> chdir: aString [
+
 	| cmd |
-	self autoOpen.
 	cmd := 'import os' , String cr
 		,
 			((aString isNil or: [ aString isEmpty ])
 				ifTrue: [ 'os.chdir("/")' ]
 				ifFalse: [ 'os.chdir("' , aString , '")' ]).
-	^ self raw: cmd
+	self execute: cmd
 ]
 
 { #category : #api }
 MPyTool >> close [
+
 	proxy close
 ]
 
 { #category : #accessing }
 MPyTool >> closeConnection [
+
 	^ closeConnection
 ]
 
 { #category : #accessing }
 MPyTool >> closeConnection: anObject [
+
 	closeConnection := anObject
 ]
 
 { #category : #private }
-MPyTool >> defaultBaudRate [
-	^ 115200
+MPyTool >> connectIfFail: aBlock [
+
+	proxy isIdle ifTrue: [ ^ aBlock cull: 'Port not yet specified' localized ].
+	proxy isNotConnected ifTrue: [ 
+		proxy open ifFalse: [ 
+			^ aBlock cull: 'cannot open:' localized , proxy comm portName ] ]
 ]
 
 { #category : #private }
-MPyTool >> disableCloseDo: aBlock [
-	| tmp |
-	tmp := closeConnection.
-	closeConnection := false.
-	aBlock value.
-	closeConnection := tmp
+MPyTool >> defaultBaudRate [
+
+	^ 115200
 ]
 
 { #category : #api }
 MPyTool >> downloadFileNamed: aString [
+
 	"MPyTool new downloadFileNamed: 'boot.py'."
 
-	| s |
-	self autoOpen.
-	s := WriteStream on: String new.
-	s
-		nextPutAll: '_s=open("';
-		nextPutAll: aString;
-		nextPutAll: '","r")';
-		cr;
-		nextPutAll: 'print(_s.read())';
-		cr;
-		nextPutAll: '_s.close()'.
-	^ self raw: s contents
+	| ret |
+	self autoConnectIfFail: [ :text | self error: text ].
+	ret := proxy
+		       downloadFileNamed: aString
+		       ifError: [ :text | self error: text ].
+	^ MicroPythonParser new parse: ret
 ]
 
 { #category : #api }
 MPyTool >> evaluate: aString [
+
 	| ret |
-	aString isEmpty
-		ifTrue: [ ^ '' ].
-	self autoOpen.
-	ret := nil.
-	aString lines size = 1
-		ifTrue: [ ret := proxy oneLiner: aString ]
-		ifFalse: [ showProgress
-				ifTrue: [ UIManager default
-						displayProgress: 'Transferring ...'
-						from: 1
-						to: 100
-						during: [ :bar | ret := proxy paste: aString during: [ :x | bar value: x ] ] ]
-				ifFalse: [ ret := proxy paste: aString ] ].
+	self autoConnectIfFail: [ :text | self error: text ].
+	proxy flush.
+	ret := proxy
+		       evaluate: aString lines
+		       ifError: [ :text | self error: text ].
 	self autoClose.
-	^ ret
+	^ MicroPythonParser new parse: ret
 ]
 
 { #category : #api }
 MPyTool >> execute: aString [
-	aString isEmpty
-		ifTrue: [ ^ '' ].
-	self autoOpen.
-	showProgress
-		ifTrue: [ UIManager default
-				displayProgress: 'Transferring ...'
-				from: 1
-				to: 100
-				during:
-					[ :bar | proxy nonBlock: aString during: [ :x | bar value: x ] ] ]
-		ifFalse: [ proxy nonBlock: aString ].
+
+	self autoConnectIfFail: [ :msg | self error: msg ].
+	proxy flush.
+	proxy execute: aString lines.
+	proxy waitCompleteSendIfError: [ :msg | self error: msg ].
 	self autoClose
 ]
 
 { #category : #api }
 MPyTool >> fileNames [
-	| ret |
-	self autoOpen.
-	ret := proxy paste: 'import os' , String cr , 'os.listdir()'.
-	self autoClose.
-	^ MicroPythonParser new parseData: ret
+
+	^ self evaluate: 'import os
+os.listdir()'
 ]
 
 { #category : #initialization }
 MPyTool >> initialize [
-	proxy := MPyProxy new.
+
+	proxy := MicroPythonProxy new.
 	showProgress := false.
 	closeConnection := true
 ]
 
 { #category : #testing }
 MPyTool >> isConnected [
+
 	^ proxy isConnected
 ]
 
 { #category : #private }
-MPyTool >> privAutoOpen [
-	| pw |
-	proxy isConnected
-		ifTrue: [ ^ true ].
-	proxy open
-		ifFalse: [ self error ].
-	proxy comm isWebRepl
-		ifFalse: [ ^ true ].
-	proxy enterWebRepl.
-	pw := UIManager default request: 'Enter password'.
-	pw
-		ifNil: [ self close.
-			^ false ].
-	proxy put: pw asByteArray , #[13].
-	self waitUntilPrompt.
-	^ true
+MPyTool >> newSerial [
+
+	^ SerialComm new
+]
+
+{ #category : #printing }
+MPyTool >> printOn: aStream [
+
+	aStream
+		nextPutAll: self class name;
+		nextPut: $(.
+	proxy printOn: aStream.
+	showProgress ifTrue: [ aStream nextPutAll: ',showProgress' ].
+	closeConnection ifTrue: [ aStream nextPutAll: ',closeConnection' ].
+	aStream nextPut: $)
 ]
 
 { #category : #accessing }
 MPyTool >> proxy [
+
 	^ proxy
 ]
 
 { #category : #accessing }
 MPyTool >> proxy: anObject [
+
 	proxy := anObject
-]
-
-{ #category : #private }
-MPyTool >> raw: aString [
-	| ret |
-	aString isEmpty
-		ifTrue: [ ^ '' ].
-	self autoOpen.
-	aString lines size = 1
-		ifTrue: [ ^ proxy oneLiner: aString ].
-	ret := nil.
-	showProgress
-		ifTrue: [ UIManager default
-				displayProgress: 'Transferring ...'
-				from: 1
-				to: 100
-				during:
-					[ :bar | ret := proxy raw: aString during: [ :x | bar value: x ] ] ]
-		ifFalse: [ ret := proxy raw: aString ].
-	self autoClose.
-	^ ret
-]
-
-{ #category : #api }
-MPyTool >> rawString [
-	(proxy isConnected or: [ proxy open ])
-		ifFalse: [ self error ].
-	proxy step.
-	^ proxy rawString
 ]
 
 { #category : #api }
 MPyTool >> reboot [
-	self autoOpen.
-	proxy reboot.
-	self autoClose
+
+	self autoConnectIfFail: [ :msg | self error: msg ].
+	proxy restart
 ]
 
 { #category : #api }
 MPyTool >> removeAll [
-	self
-		disableCloseDo: [ self fileNames do: [ :each | self removeFileNamed: each ] ]
+
+	| files |
+	self autoConnectIfFail: [ :text | self error: text ].
+	files := self fileNames.
+	files isEmpty ifTrue: [ ^ self ].
+	self autoConnectIfFail: [ :text | self error: text ].
+	files do: [ :each | 
+		proxy deleteFileNamed: each.
+		proxy waitPromptIfError: [ :msg | self error: msg ] ].
+
+	self autoClose
 ]
 
 { #category : #api }
 MPyTool >> removeFileNamed: aString [
-	self autoOpen.
-	^ self
-		raw: 'import os' , String cr , 'os.remove("' , aString , '")'
+
+	self autoConnectIfFail: [ :text | self error: text ].
+	proxy deleteFileNamed: aString.
+	proxy waitPromptIfError: [ :msg | self error: msg ].
+	self autoClose
 ]
 
 { #category : #api }
 MPyTool >> responseString [
+
 	(proxy isConnected or: [ proxy open ])
 		ifFalse: [ self error ].
 	proxy step.
@@ -230,64 +209,67 @@ MPyTool >> responseString [
 
 { #category : #accessing }
 MPyTool >> showProgress [
+
 	^ showProgress
 ]
 
 { #category : #accessing }
 MPyTool >> showProgress: anObject [
+
 	showProgress := anObject
 ]
 
 { #category : #accessing }
 MPyTool >> timeout [
+
 	^ proxy timeout
 ]
 
 { #category : #accessing }
 MPyTool >> timeout: anInteger [
+
 	proxy timeout: anInteger
 ]
 
 { #category : #api }
 MPyTool >> upload: aString fileNamed: aString2 [
-	| s |
-	self autoOpen.
-	s := WriteStream on: String new.
-	s
-		nextPutAll: '_s=open("';
-		nextPutAll: aString2;
-		nextPutAll: '","w")';
-		cr.
-	self writeQuotedString: aString on: s.
-	s nextPutAll: '_s.close()'.
-	^ self raw: s contents
+
+	self autoConnectIfFail: [ :text | self error: text ].
+	proxy upload: aString fileNamed: aString2.
+	proxy waitCompleteSendIfError: [ :msg | self error: msg ].
+	self autoClose
 ]
 
 { #category : #api }
 MPyTool >> uploadClass: aClass [
+
 	self upload: aClass asMicroPython fileNamed: aClass filename
 ]
 
 { #category : #api }
 MPyTool >> useSerial [
+
 	| list ret c |
-	c := NativeSerial new.
+	c := self newSerial.
 	list := c portNames.
 	ret := UIManager default chooseFrom: list.
 	ret = 0
 		ifTrue: [ ^ self ].
-	c portName: (list at: ret).
 	c baudRate: self defaultBaudRate.
-	proxy close.
-	proxy comm: c
+	proxy comm: c.
+	proxy portName: (list at: ret).
+	proxy close
 ]
 
 { #category : #api }
 MPyTool >> useWebRepl [
+
 	| c list addr |
 	c := WebRepl new.
-	list := c optionsNamed: #addresses.
-	addr := UIManager default chooseOrRequestFrom: list title: 'choose or enter IP address'.
+	list := c recentAddresses.
+	addr := UIManager default
+		        chooseOrRequestFrom: list
+		        title: 'choose or enter IP address'.
 	addr ifNil: [ ^ self ].
 	c address: addr.
 	proxy close.
@@ -295,17 +277,7 @@ MPyTool >> useWebRepl [
 	closeConnection := false
 ]
 
-{ #category : #api }
-MPyTool >> waitUntilPrompt [
-	self privAutoOpen
-		ifFalse: [ ^ nil ].
-	[ proxy checkPrompt ]
-		whileFalse: [ proxy step.
-			100 milliSeconds wait ].
-	^ self responseString
-]
-
-{ #category : #private }
+{ #category : #utilities }
 MPyTool >> writeQuotedString: aString on: aStream [
 	aString
 		linesDo: [ :each | 

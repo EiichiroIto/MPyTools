@@ -16,10 +16,10 @@ MaqueenLineTracerTest >> testInitialize [
 		equals:
 			'
 class MaqueenLineTracer:
-	def __init__(self):
-		from maqueen import MicroMaqueen
-		self.maqueen = MicroMaqueen()
-		self.maqueen.use_usonic()
+  def __init__(self):
+    from maqueen import MicroMaqueen
+    self.maqueen = MicroMaqueen()
+    self.maqueen.use_usonic()
 
 '
 ]
@@ -33,9 +33,9 @@ MaqueenLineTracerTest >> testLightOff [
 		equals:
 			'
 class MaqueenLineTracer:
-	def light_off(self):
-		self.maqueen.led_left(False)
-		self.maqueen.led_right(False)
+  def light_off(self):
+    self.maqueen.led_left(False)
+    self.maqueen.led_right(False)
 
 '
 ]
@@ -49,9 +49,9 @@ MaqueenLineTracerTest >> testLightOn [
 		equals:
 			'
 class MaqueenLineTracer:
-	def light_on(self):
-		self.maqueen.led_left(True)
-		self.maqueen.led_right(True)
+  def light_on(self):
+    self.maqueen.led_left(True)
+    self.maqueen.led_right(True)
 
 '
 ]
@@ -65,24 +65,24 @@ MaqueenLineTracerTest >> testRun [
 		equals:
 			'
 class MaqueenLineTracer:
-	def run(self):
-		while True:
-			if (self.maqueen.is_line_left()) and (self.maqueen.is_line_right()):
-				pass
-			if (self.maqueen.is_line_left()) and (not ((self.maqueen.is_line_right()))):
-				self.maqueen.motor_left(100)
-				self.maqueen.motor_right(0)
-			if (not ((self.maqueen.is_line_left()))) and (self.maqueen.is_line_right()):
-				self.maqueen.motor_left(0)
-				self.maqueen.motor_right(100)
-			if (not ((self.maqueen.is_line_left()))) and (not ((self.maqueen.is_line_right()))):
-				self.maqueen.motor_left(100)
-				self.maqueen.motor_right(100)
-				light_off()
-			while (self.maqueen.distance()) < 10:
-				self.maqueen.motor_left(0)
-				self.maqueen.motor_right(0)
-				light_on()
+  def run(self):
+    while True:
+      if (self.maqueen.is_line_left()) and (self.maqueen.is_line_right()):
+        pass
+      if (self.maqueen.is_line_left()) and (not ((self.maqueen.is_line_right()))):
+        self.maqueen.motor_left(100)
+        self.maqueen.motor_right(0)
+      if (not ((self.maqueen.is_line_left()))) and (self.maqueen.is_line_right()):
+        self.maqueen.motor_left(0)
+        self.maqueen.motor_right(100)
+      if (not ((self.maqueen.is_line_left()))) and (not ((self.maqueen.is_line_right()))):
+        self.maqueen.motor_left(100)
+        self.maqueen.motor_right(100)
+        light_off()
+      while (self.maqueen.distance()) < 10:
+        self.maqueen.motor_left(0)
+        self.maqueen.motor_right(0)
+        light_on()
 
 '
 ]
@@ -111,16 +111,16 @@ MaqueenLineTracerTest >> testWaitForButtonAPressed [
 	self
 		assert: r
 		equals:
-			'from microbit import button_a
+      'from microbit import button_a
 
 class MaqueenLineTracer:
-	def wait_for_button_a_pressed(self):
-		while button_a.is_pressed():
-			pass
-		while not (button_a.is_pressed()):
-			pass
-		while button_a.is_pressed():
-			pass
+  def wait_for_button_a_pressed(self):
+    while button_a.is_pressed():
+      pass
+    while not (button_a.is_pressed()):
+      pass
+    while button_a.is_pressed():
+      pass
 
 '
 ]

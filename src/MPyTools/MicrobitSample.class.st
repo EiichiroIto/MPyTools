@@ -43,7 +43,7 @@ MicrobitSample >> extModuleTest1 [
 
 { #category : #samples }
 MicrobitSample >> hello [
-	"self isTopLevel: true."
+	self isTopLevel: true.
 	display scroll: 'Hello!!'.
 	display show: (Image at: #HAPPY).
 	time sleep: 1.

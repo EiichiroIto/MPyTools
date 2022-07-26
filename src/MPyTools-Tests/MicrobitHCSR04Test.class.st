@@ -16,9 +16,9 @@ MicrobitHCSR04Test >> testDistance [
 		equals:
 			'
 class MicrobitHCSR04:
-	def distance(self):
-		t = us_getecho()
-		return int(((340.0 * t) / 20000))
+  def distance(self):
+    t = us_getecho()
+    return int(((340.0 * t) / 20000))
 
 '
 ]
@@ -32,9 +32,9 @@ MicrobitHCSR04Test >> testInitializeTriggerEcho [
 		equals:
 			'
 class MicrobitHCSR04:
-	def __init__(self,b,a):
-		self.trigger = b
-		self.echo = a
+  def __init__(self,b,a):
+    self.trigger = b
+    self.echo = a
 
 '
 ]
@@ -46,27 +46,27 @@ MicrobitHCSR04Test >> testUsGetecho [
 	self
 		assert: r
 		equals:
-			'import time
+      'import time
 
 class MicrobitHCSR04:
-	def us_getecho(self):
-		a = 0
-		self.trigger.write_digital(1)
-		self.trigger.write_digital(0)
-		while (self.echo.read_digital()) == 0:
-			time.sleep_us(1)
-			a = a + 1
-			if a > 1000:
-				return 0
-		b = time.ticks_us()
-		a = 0
-		while (self.echo.read_digital()) > 0:
-			time.sleep_us(1)
-			a = a + 1
-			if a > 1000:
-				return 0
-		c = time.ticks_us()
-		return time.ticks_diff(c, b)
+  def us_getecho(self):
+    a = 0
+    self.trigger.write_digital(1)
+    self.trigger.write_digital(0)
+    while (self.echo.read_digital()) == 0:
+      time.sleep_us(1)
+      a = a + 1
+      if a > 1000:
+        return 0
+    b = time.ticks_us()
+    a = 0
+    while (self.echo.read_digital()) > 0:
+      time.sleep_us(1)
+      a = a + 1
+      if a > 1000:
+        return 0
+    c = time.ticks_us()
+    return time.ticks_diff(c, b)
 
 '
 ]

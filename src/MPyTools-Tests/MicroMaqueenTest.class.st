@@ -16,8 +16,8 @@ MicroMaqueenTest >> testDistance [
 		equals:
 			'
 class MicroMaqueen:
-	def distance(self):
-		return self.usonic.distance()
+  def distance(self):
+    return self.usonic.distance()
 
 '
 ]
@@ -29,13 +29,13 @@ MicroMaqueenTest >> testInitialize [
 	self
 		assert: r
 		equals:
-			'from neopixel import NeoPixel
+      'from neopixel import NeoPixel
 from microbit import i2c,pin15
 
 class MicroMaqueen:
-	def __init__(self):
-		i2c.init()
-		self.np = NeoPixel(pin15, 4)
+  def __init__(self):
+    i2c.init()
+    self.np = NeoPixel(pin15, 4)
 
 '
 ]
@@ -47,11 +47,11 @@ MicroMaqueenTest >> testIsLineLeft [
 	self
 		assert: r
 		equals:
-			'from microbit import pin13
+      'from microbit import pin13
 
 class MicroMaqueen:
-	def is_line_left(self):
-		return (pin13.read_digital()) > 0
+  def is_line_left(self):
+    return (pin13.read_digital()) > 0
 
 '
 ]
@@ -63,11 +63,11 @@ MicroMaqueenTest >> testIsLineRight [
 	self
 		assert: r
 		equals:
-			'from microbit import pin14
+      'from microbit import pin14
 
 class MicroMaqueen:
-	def is_line_right(self):
-		return (pin14.read_digital()) > 0
+  def is_line_right(self):
+    return (pin14.read_digital()) > 0
 
 '
 ]
@@ -79,11 +79,11 @@ MicroMaqueenTest >> testLedLeft [
 	self
 		assert: r
 		equals:
-			'from microbit import pin8
+      'from microbit import pin8
 
 class MicroMaqueen:
-	def led_left(self,a):
-		pin8.write_digital(1 if a else 0)
+  def led_left(self,a):
+    pin8.write_digital(1 if a else 0)
 
 '
 ]
@@ -95,11 +95,11 @@ MicroMaqueenTest >> testLedRight [
 	self
 		assert: r
 		equals:
-			'from microbit import pin12
+      'from microbit import pin12
 
 class MicroMaqueen:
-	def led_right(self,a):
-		pin12.write_digital(1 if a else 0)
+  def led_right(self,a):
+    pin12.write_digital(1 if a else 0)
 
 '
 ]
@@ -111,11 +111,11 @@ MicroMaqueenTest >> testMotorLeft [
 	self
 		assert: r
 		equals:
-			'from microbit import i2c
+      'from microbit import i2c
 
 class MicroMaqueen:
-	def motor_left(self,a):
-		i2c.write(16,(bytes((0,2 if a > 0 else 1,abs(a)))))
+  def motor_left(self,a):
+    i2c.write(16,(bytes((0,2 if a > 0 else 1,abs(a)))))
 
 '
 ]
@@ -127,11 +127,11 @@ MicroMaqueenTest >> testMotorRight [
 	self
 		assert: r
 		equals:
-			'from microbit import i2c
+      'from microbit import i2c
 
 class MicroMaqueen:
-	def motor_right(self,a):
-		i2c.write(16,(bytes((2,2 if a > 0 else 1,abs(a)))))
+  def motor_right(self,a):
+    i2c.write(16,(bytes((2,2 if a > 0 else 1,abs(a)))))
 
 '
 ]
@@ -143,11 +143,11 @@ MicroMaqueenTest >> testNeopixelAtPut [
 	self
 		assert: r
 		equals:
-			'
+      '
 class MicroMaqueen:
-	def neopixel_at_put(self,b,a):
-		self.np[b] = a
-		self.np.show()
+  def neopixel_at_put(self,b,a):
+    self.np[b] = a
+    self.np.show()
 
 '
 ]
@@ -159,11 +159,11 @@ MicroMaqueenTest >> testPlayMusic [
 	self
 		assert: r
 		equals:
-			'import music
+      'import music
 
 class MicroMaqueen:
-	def play_music(self,a):
-		music.play(a)
+  def play_music(self,a):
+    music.play(a)
 
 '
 ]
@@ -175,12 +175,12 @@ MicroMaqueenTest >> testUseUsonic [
 	self
 		assert: r
 		equals:
-			'from microbit import pin2,pin1
+      'from microbit import pin2,pin1
 
 class MicroMaqueen:
-	def use_usonic(self):
-		from hcsr04 import MicrobitHCSR04
-		self.usonic = MicrobitHCSR04(pin1, pin2)
+  def use_usonic(self):
+    from hcsr04 import MicrobitHCSR04
+    self.usonic = MicrobitHCSR04(pin1, pin2)
 
 '
 ]

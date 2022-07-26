@@ -139,7 +139,7 @@ MicroPythonCoderTest >> testEmitFunctionHeaderOnIndent [
 	c emitFunctionHeader: m on: s indent: 1.
 	self
 		assert: s contents
-		equals: String cr , String tab , 'def test(a,b):' , String cr
+		equals: String cr , '  def test(a,b):' , String cr
 ]
 
 { #category : #test }
@@ -517,7 +517,7 @@ MicroPythonCoderTest >> testGenerateDoOnIndent [
 	self
 		assert: s contents
 		equals:
-			'for b in range(2,5+1):' , String cr , String tab , 'a'
+			'for b in range(2,5+1):' , String cr , '  a'
 ]
 
 { #category : #test }
@@ -661,8 +661,8 @@ MicroPythonCoderTest >> testGenerateIfFalseIfTrueOnIndent [
 	self
 		assert: s contents
 		equals:
-			'if a:' , String cr , String tab , 'd' , String cr , 'else:'
-				, String cr , String tab , 'b' , String cr , String tab , 'c'.
+			'if a:' , String cr , '  d' , String cr , 'else:'
+				, String cr , '  b' , String cr , '  c'.
 	s := WriteStream on: String new.
 	n1 := TrConstantNode new value: true.
 	n2 := TrVariableNode new name: 'b'.
@@ -756,8 +756,8 @@ MicroPythonCoderTest >> testGenerateIfNilIfNotNilOnIndent [
 	self
 		assert: s contents
 		equals:
-			'if a == None:' , String cr , String tab , 'b' , String cr , String tab , 'c'
-				, String cr , 'else:' , String cr , String tab , 'd'
+			'if a == None:' , String cr , '  b' , String cr , '  c'
+				, String cr , 'else:' , String cr , '  d'
 ]
 
 { #category : #test }
@@ -780,7 +780,7 @@ MicroPythonCoderTest >> testGenerateIfNilOnIndent [
 	self
 		assert: s contents
 		equals:
-			'if a == None:' , String cr , String tab , 'b' , String cr , String tab , 'c'
+			'if a == None:' , String cr , '  b' , String cr , '  c'
 ]
 
 { #category : #test }
@@ -803,7 +803,7 @@ MicroPythonCoderTest >> testGenerateIfNotNilOnIndent [
 	self
 		assert: s contents
 		equals:
-			'if a != None:' , String cr , String tab , 'b' , String cr , String tab , 'c'
+			'if a != None:' , String cr , '  b' , String cr , '  c'
 ]
 
 { #category : #test }
@@ -829,8 +829,8 @@ MicroPythonCoderTest >> testGenerateIfThenElseOnIndent [
 	self
 		assert: s contents
 		equals:
-			'if a:' , String cr , String tab , 'b' , String cr , String tab , 'c'
-				, String cr , 'else:' , String cr , String tab , 'd'
+			'if a:' , String cr , '  b' , String cr , '  c'
+				, String cr , 'else:' , String cr , '  d'
 ]
 
 { #category : #test }
@@ -856,8 +856,8 @@ MicroPythonCoderTest >> testGenerateIfTrueIfFalseOnIndent [
 	self
 		assert: s contents
 		equals:
-			'if a:' , String cr , String tab , 'b' , String cr , String tab , 'c'
-				, String cr , 'else:' , String cr , String tab , 'd'.
+			'if a:' , String cr , '  b' , String cr , '  c'
+				, String cr , 'else:' , String cr , '  d'.
 	s := WriteStream on: String new.
 	n1 := TrConstantNode new value: true.
 	n2 := TrVariableNode new name: 'b'.
@@ -1224,7 +1224,7 @@ MicroPythonCoderTest >> testGenerateRepeatOnIndent [
 	self
 		assert: s contents
 		equals:
-			'while True:' , String cr , String tab , 'a' , String cr , String tab , 'b'
+			'while True:' , String cr , '  a' , String cr , '  b'
 ]
 
 { #category : #test }
@@ -1378,7 +1378,7 @@ MicroPythonCoderTest >> testGenerateTimesRepeatOnIndent [
 	self
 		assert: s contents
 		equals:
-			'for _ in range(0,9):' , String cr , String tab , 'b'
+			'for _ in range(0,9):' , String cr , '  b'
 ]
 
 { #category : #test }
@@ -1403,7 +1403,7 @@ MicroPythonCoderTest >> testGenerateToByDoOnIndent [
 	self
 		assert: s contents
 		equals:
-			'for b in range(2,9+1,3):' , String cr , String tab , 'a'.
+			'for b in range(2,9+1,3):' , String cr , '  a'.
 	s := ReadWriteStream on: String new.
 	n1 := TrConstantNode new value: 5.
 	n2 := TrConstantNode new value: 2.
@@ -1423,7 +1423,7 @@ MicroPythonCoderTest >> testGenerateToByDoOnIndent [
 	self
 		assert: s contents
 		equals:
-			'for b in range(5,2-1,-1):' , String cr , String tab , 'a'
+			'for b in range(5,2-1,-1):' , String cr , '  a'
 ]
 
 { #category : #test }
@@ -1446,7 +1446,7 @@ MicroPythonCoderTest >> testGenerateToDoOnIndent [
 	self
 		assert: s contents
 		equals:
-			'for b in range(2,5+1):' , String cr , String tab , 'a'
+			'for b in range(2,5+1):' , String cr , '  a'
 ]
 
 { #category : #test }
@@ -1478,7 +1478,7 @@ MicroPythonCoderTest >> testGenerateWhileFalseOnIndent [
 	self
 		assert: s contents
 		equals:
-			'while not (a):' , String cr , String tab , 'b'
+			'while not (a):' , String cr , '  b'
 ]
 
 { #category : #test }
@@ -1499,7 +1499,7 @@ MicroPythonCoderTest >> testGenerateWhileTrueOnIndent [
 	self
 		assert: s contents
 		equals:
-			'while a:' , String cr , String tab , 'b'
+			'while a:' , String cr , '  b'
 ]
 
 { #category : #test }

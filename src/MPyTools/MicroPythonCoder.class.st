@@ -188,6 +188,15 @@ MicroPythonCoder >> emitImports: aCollection on: aStream [
 ]
 
 { #category : #'code generation' }
+MicroPythonCoder >> emitIndentLevel: anInteger on: aStream [
+
+	anInteger timesRepeat: [ 
+		aStream
+			space;
+			space ]
+]
+
+{ #category : #'code generation' }
 MicroPythonCoder >> emitMessageArguments: aNode on: aStream indent: level [
 	aStream nextPut: $(.
 	aNode arguments

@@ -424,9 +424,10 @@ SpMPyTool >> input [
 	self autoConnectIfFail: [ :msg | ^ self message: msg ].
 	ret := self multiLineRequest: 'Enter expression' localized initialAnswer: ''.
 	ret ifNil: [ ^ self ].
+	ret := ret lines reject: #isEmpty.
 	ret isEmpty ifTrue: [ ^ self ].
 	proxy isReady ifFalse: [ ^ self ].
-	proxy execute: ret lines
+	proxy execute: ret
 ]
 
 { #category : #private }
@@ -513,6 +514,7 @@ SpMPyTool >> selectClass [
 	| ret list |
 	list := MicroPythonBase allSubclasses reject: #isBase.
 	list isEmpty ifTrue: [ ^ self ].
+	list := list sort: [ :a :b | a name < b name ].
 	ret := list size = 1
 		       ifTrue: [ ret := list first ]
 		       ifFalse: [ 
@@ -557,7 +559,7 @@ SpMPyTool >> send [
 	target := self currentTarget.
 	target ifNil: [ ^ self ].
 	self autoConnectIfFail: [ :msg | ^ self message: msg ].
-	proxy execute: target asMicroPython
+	proxy execute: target asMicroPython lines
 ]
 
 { #category : #initialization }

@@ -1,31 +1,3 @@
-"
-This is a sample application using MicroPythonCoder.
-
-M5Atom Lite controls a junk Pet's Auto Feeder when uploaded to the device.
-
-- It connect wifi and adjust time using NTP.
-- It feeds one portion when powered.
-- It feeds three times a day at specified time.
-- It accepts web connections for feeding manually.
-
-Connection Schema.
-
-M5AtomLite     Auto Feeder
-  GPIO22         potion SW
-  GPIO21         SCL (i2c motor driver)
-  GPIO25         SDL (i2c motor driver)
-
-To generate source.
-  AutoFeeder asMicroPython.
-
-To upload it.
-
-   MPyTool new
-      useSerial;
-      uploadClass: AutoFeeder;
-      reboot.
-
-"
 Class {
 	#name : #AutoFeeder,
 	#superclass : #ESP8266Base,
@@ -50,9 +22,6 @@ Class {
 		'GPIO32',
 		'GPIO33',
 		'IR',
-		'MQTTCommand',
-		'MQTTSERVER',
-		'MQTTStatus',
 		'NEOPIXEL',
 		'PASSWORD',
 		'TZOFFSET'
@@ -66,11 +35,6 @@ AutoFeeder class >> initialize [
 	"ESSID := 'AIBONET2'."
 	ESSID := 'itolab'.
 	PASSWORD := '12345678'.
-	MQTTSERVER := '219.94.240.178'.
-	MQTTStatus := '/home/autofeeder1/status'.
-	MQTTCommand := '/home/autofeeder1/command'.
-	"MQTTStatus := '/home/autofeeder2/status'.
-	MQTTCommand := '/home/autofeeder2/command'."
 	TZOFFSET := 9 * 3600.
 	BUTTON := 39.
 	NEOPIXEL := 27.
@@ -112,20 +76,19 @@ AutoFeeder >> error: aString [
 
 { #category : #private }
 AutoFeeder >> feedCount [
+
 	| n hh mm tmp |
-	portion > 0
-		ifTrue: [ tmp := portion.
-			portion := 0.
-			^ tmp ].
+	portion > 0 ifTrue: [ 
+		tmp := portion.
+		portion := 0.
+		^ tmp ].
+	self isButtonOn ifTrue: [ ^ 1 ].
 	n := self now.
 	hh := n fourth.
 	mm := n fifth.
-	(hh = 6 and: [ mm = 20 ])
-		ifTrue: [ ^ 4 ].
-	(hh = 12 and: [ mm = 0 ])
-		ifTrue: [ ^ 2 ].
-	(hh = 18 and: [ mm = 0 ])
-		ifTrue: [ ^ 4 ].
+	(hh = 6 and: [ mm = 20 ]) ifTrue: [ ^ 4 ].
+	(hh = 12 and: [ mm = 0 ]) ifTrue: [ ^ 2 ].
+	(hh = 18 and: [ mm = 0 ]) ifTrue: [ ^ 4 ].
 	"(hh = 0 and: [ mm = 0 ])
 		ifTrue: [ self mqttStatus: 'ntp settime'.
 			ntptime settime ]."
@@ -134,13 +97,17 @@ AutoFeeder >> feedCount [
 
 { #category : #api }
 AutoFeeder >> feedPortion: anInteger [
+
+	self print: self now.
+	self print: 'feedPortion:' , anInteger asString.
 	self motorOn.
 	[ self isFeedSwOn ] whileTrue: [ time sleepMs: 100 ].
-	anInteger
-		timesRepeat: [ [ self isFeedSwOn ] whileFalse: [ time sleepMs: 100 ].
-			[ self isFeedSwOn ] whileTrue: [ time sleepMs: 100 ] ].
+	anInteger timesRepeat: [ 
+		self print: '***'.
+		[ self isFeedSwOn ] whileFalse: [ time sleepMs: 100 ].
+		[ self isFeedSwOn ] whileTrue: [ time sleepMs: 100 ] ].
 	self motorOff.
-	self mqttStatus: 'feed ' , anInteger asString , ' portions'
+	self print: 'feed done'
 ]
 
 { #category : #initialization }
@@ -176,21 +143,22 @@ AutoFeeder >> led: anArray [
 
 { #category : #api }
 AutoFeeder >> main [
+
 	| c |
 	self feedPortion: 1.
-	[ self led: #(0 0 0).
+	[ 
+	self led: #( 0 0 0 ).
 	c := self feedCount.
 	c > 0
-		ifTrue: [ self feedPortion: c.
-			self led: #(128 128 0).
-			time sleep: 60.
-			portion := 0 ]
-		ifFalse: [ self isButtonOn
-				ifTrue: [ self led: #(0 0 128).
-					self feedPortion: 1 ]
-				ifFalse: [ time sleep: 5.
-					self led: #(128 128 128).
-					time sleepMs: 100 ] ] ] repeat
+		ifTrue: [ 
+			self led: #( 0 0 128 ).
+			self feedPortion: c.
+			self led: #( 128 128 0 ).
+			time sleep: 60 ]
+		ifFalse: [ 
+			time sleep: 5.
+			self led: #( 128 128 128 ).
+			time sleepMs: 100 ] ] repeat
 ]
 
 { #category : #api }
@@ -201,26 +169,6 @@ AutoFeeder >> motorOff [
 { #category : #api }
 AutoFeeder >> motorOn [
 	i2c write: #[0 253] to: 100
-]
-
-{ #category : #networking }
-AutoFeeder >> mqtt: aTopic command: aString [
-	self print: 'command received'.
-	portion := aString asInteger
-]
-
-{ #category : #networking }
-AutoFeeder >> mqttStatus: aString [
-	| tm str |
-	tm := self now.
-	str := '{}/{}/{} {}:{}:{} ' format: tm unpack.
-	pub publish: MQTTStatus msg: str , aString
-]
-
-{ #category : #networking }
-AutoFeeder >> mqttSubscriber [
-	self print: 'subscriver start'.
-	[ pub waitMsg ] repeat
 ]
 
 { #category : #api }
@@ -242,37 +190,27 @@ AutoFeeder >> opening [
 
 { #category : #api }
 AutoFeeder >> setup [
-	self led: #(128 0 0).
-	self connectWifi.
-	ntptime settime.
-	self led: #(0 128 0).
-	self setupMqtt.
-	self led: #(0 0 128).
-	(i2c scan includes: 100)
-		ifFalse: [ self mqttStatus: 'motor is not connected'.
-			self error: 'motor is not connected' ].
-	self motorOff.
-	time sleep: 1.
-	self mqttStatus: 'start'
-]
 
-{ #category : #networking }
-AutoFeeder >> setupMqtt [
-	pub := MQTTClient initMqtt: self clientId ipaddr: MQTTSERVER.
-	pub connect.
-	"sub := MQTTClient initMqtt: self clientId ipaddr: MQTTSERVER."
-	pub setCallback: #mqtt:command: asFunctionName.
-	"sub connect."
-	pub subscribe: MQTTCommand
+	self led: #( 128 0 0 ).
+	self connectWifi.
+	self led: #( 0 128 0 ).
+	ntptime settime.
+	time sleep: 1.
+	self led: #( 0 0 128 ).
+	(i2c scan includes: 100) ifFalse: [ 
+		self error: 'motor is not connected' ].
+	self motorOff.
+	self print: 'Setup done'.
+	time sleep: 1
 ]
 
 { #category : #'top level' }
 AutoFeeder >> start [
 	| a |
 	self isTopLevel: true.
+	self print: 'Starting ...'.
 	a := self class new.
 	a opening.
 	a setup.
-	_thread start: a mqttSubscriber with: #().
 	a main
 ]

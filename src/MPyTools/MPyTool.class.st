@@ -99,9 +99,7 @@ MPyTool >> evaluate: aString [
 	| ret |
 	self autoConnectIfFail: [ :text | self error: text ].
 	proxy flush.
-	ret := proxy
-		       evaluate: aString lines
-		       ifError: [ :text | self error: text ].
+	ret := proxy evaluate: aString ifError: [ :text | self error: text ].
 	self autoClose.
 	^ MicroPythonParser new parse: ret
 ]
@@ -111,7 +109,7 @@ MPyTool >> execute: aString [
 
 	self autoConnectIfFail: [ :msg | self error: msg ].
 	proxy flush.
-	proxy execute: aString lines.
+	proxy execute: aString.
 	proxy waitCompleteSendIfError: [ :msg | self error: msg ].
 	self autoClose
 ]

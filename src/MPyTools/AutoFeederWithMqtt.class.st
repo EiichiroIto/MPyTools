@@ -1,5 +1,33 @@
+"
+This is a sample application using MicroPythonCoder.
+
+M5Atom Lite controls a junk Pet's Auto Feeder when uploaded to the device.
+
+- It connect wifi and adjust time using NTP.
+- It feeds one portion when powered.
+- It feeds three times a day at specified time.
+- It accepts web connections for feeding manually.
+
+Connection Schema.
+
+M5AtomLite     Auto Feeder
+  GPIO22         potion SW
+  GPIO21         SCL (i2c motor driver)
+  GPIO25         SDL (i2c motor driver)
+
+To generate source.
+  AutoFeeder asMicroPython.
+
+To upload it.
+
+   MPyTool new
+      useSerial;
+      uploadClass: AutoFeeder;
+      reboot.
+
+"
 Class {
-	#name : #AutoFeederNoMqtt,
+	#name : #AutoFeederWithMqtt,
 	#superclass : #ESP8266Base,
 	#instVars : [
 		'button',
@@ -22,6 +50,9 @@ Class {
 		'GPIO32',
 		'GPIO33',
 		'IR',
+		'MQTTCommand',
+		'MQTTSERVER',
+		'MQTTStatus',
 		'NEOPIXEL',
 		'PASSWORD',
 		'TZOFFSET'
@@ -30,11 +61,16 @@ Class {
 }
 
 { #category : #'class initialization' }
-AutoFeederNoMqtt class >> initialize [
+AutoFeederWithMqtt class >> initialize [
 	"self initialize"
 	"ESSID := 'AIBONET2'."
 	ESSID := 'itolab'.
 	PASSWORD := '12345678'.
+	MQTTSERVER := '219.94.240.178'.
+	MQTTStatus := '/home/autofeeder1/status'.
+	MQTTCommand := '/home/autofeeder1/command'.
+	"MQTTStatus := '/home/autofeeder2/status'.
+	MQTTCommand := '/home/autofeeder2/command'."
 	TZOFFSET := 9 * 3600.
 	BUTTON := 39.
 	NEOPIXEL := 27.
@@ -50,12 +86,12 @@ AutoFeederNoMqtt class >> initialize [
 ]
 
 { #category : #private }
-AutoFeederNoMqtt >> clientId [
+AutoFeederWithMqtt >> clientId [
 	^ ubinascii hexlify: machine uniqueId
 ]
 
 { #category : #networking }
-AutoFeederNoMqtt >> connectWifi [
+AutoFeederWithMqtt >> connectWifi [
 	| wlan |
 	wlan := WLAN initWifi: #STA_IF.
 	wlan active: true.
@@ -66,7 +102,7 @@ AutoFeederNoMqtt >> connectWifi [
 ]
 
 { #category : #'error handling' }
-AutoFeederNoMqtt >> error: aString [
+AutoFeederWithMqtt >> error: aString [
 	self print: 'Error:' , aString.
 	[ self led: #(128 0 0).
 	time sleepMs: 500.
@@ -75,7 +111,7 @@ AutoFeederNoMqtt >> error: aString [
 ]
 
 { #category : #private }
-AutoFeederNoMqtt >> feedCount [
+AutoFeederWithMqtt >> feedCount [
 	| n hh mm tmp |
 	portion > 0
 		ifTrue: [ tmp := portion.
@@ -97,17 +133,18 @@ AutoFeederNoMqtt >> feedCount [
 ]
 
 { #category : #api }
-AutoFeederNoMqtt >> feedPortion: anInteger [
+AutoFeederWithMqtt >> feedPortion: anInteger [
 	self motorOn.
 	[ self isFeedSwOn ] whileTrue: [ time sleepMs: 100 ].
 	anInteger
 		timesRepeat: [ [ self isFeedSwOn ] whileFalse: [ time sleepMs: 100 ].
 			[ self isFeedSwOn ] whileTrue: [ time sleepMs: 100 ] ].
-	self motorOff
+	self motorOff.
+	self mqttStatus: 'feed ' , anInteger asString , ' portions'
 ]
 
 { #category : #initialization }
-AutoFeederNoMqtt >> initialize [
+AutoFeederWithMqtt >> initialize [
 	button := Pin at: BUTTON mode: #IN.
 	sw := Pin at: GPIO22 mode: #IN.
 	np := NeoPixel initPin: (Pin at: NEOPIXEL) count: 1.
@@ -116,7 +153,7 @@ AutoFeederNoMqtt >> initialize [
 ]
 
 { #category : #testing }
-AutoFeederNoMqtt >> isButtonOn [
+AutoFeederWithMqtt >> isButtonOn [
 	button value = 0
 		ifFalse: [ ^ false ].
 	time sleepMs: 100.
@@ -124,7 +161,7 @@ AutoFeederNoMqtt >> isButtonOn [
 ]
 
 { #category : #testing }
-AutoFeederNoMqtt >> isFeedSwOn [
+AutoFeederWithMqtt >> isFeedSwOn [
 	sw value > 0
 		ifFalse: [ ^ false ].
 	time sleepMs: 100.
@@ -132,13 +169,13 @@ AutoFeederNoMqtt >> isFeedSwOn [
 ]
 
 { #category : #api }
-AutoFeederNoMqtt >> led: anArray [
+AutoFeederWithMqtt >> led: anArray [
 	np at: 0 put: anArray.
 	np write
 ]
 
 { #category : #api }
-AutoFeederNoMqtt >> main [
+AutoFeederWithMqtt >> main [
 	| c |
 	self feedPortion: 1.
 	[ self led: #(0 0 0).
@@ -157,22 +194,42 @@ AutoFeederNoMqtt >> main [
 ]
 
 { #category : #api }
-AutoFeederNoMqtt >> motorOff [
+AutoFeederWithMqtt >> motorOff [
 	i2c write: #[0 0] to: 100
 ]
 
 { #category : #api }
-AutoFeederNoMqtt >> motorOn [
+AutoFeederWithMqtt >> motorOn [
 	i2c write: #[0 253] to: 100
 ]
 
+{ #category : #networking }
+AutoFeederWithMqtt >> mqtt: aTopic command: aString [
+	self print: 'command received'.
+	portion := aString asInteger
+]
+
+{ #category : #networking }
+AutoFeederWithMqtt >> mqttStatus: aString [
+	| tm str |
+	tm := self now.
+	str := '{}/{}/{} {}:{}:{} ' format: tm unpack.
+	pub publish: MQTTStatus msg: str , aString
+]
+
+{ #category : #networking }
+AutoFeederWithMqtt >> mqttSubscriber [
+	self print: 'subscriver start'.
+	[ pub waitMsg ] repeat
+]
+
 { #category : #api }
-AutoFeederNoMqtt >> now [
+AutoFeederWithMqtt >> now [
 	^ time localtime: (time mktime: time localtime) + TZOFFSET
 ]
 
 { #category : #private }
-AutoFeederNoMqtt >> opening [
+AutoFeederWithMqtt >> opening [
 	| rgb |
 	20
 		timesRepeat: [ rgb := {(random randrange: 256).
@@ -184,25 +241,38 @@ AutoFeederNoMqtt >> opening [
 ]
 
 { #category : #api }
-AutoFeederNoMqtt >> setup [
-
-	self led: #( 128 0 0 ).
+AutoFeederWithMqtt >> setup [
+	self led: #(128 0 0).
 	self connectWifi.
 	ntptime settime.
-	self led: #( 0 128 0 ).
-	self led: #( 0 0 128 ).
-	(i2c scan includes: 100) ifFalse: [ 
-		self error: 'motor is not connected' ].
+	self led: #(0 128 0).
+	self setupMqtt.
+	self led: #(0 0 128).
+	(i2c scan includes: 100)
+		ifFalse: [ self mqttStatus: 'motor is not connected'.
+			self error: 'motor is not connected' ].
 	self motorOff.
-	time sleep: 1
+	time sleep: 1.
+	self mqttStatus: 'start'
+]
+
+{ #category : #networking }
+AutoFeederWithMqtt >> setupMqtt [
+	pub := MQTTClient initMqtt: self clientId ipaddr: MQTTSERVER.
+	pub connect.
+	"sub := MQTTClient initMqtt: self clientId ipaddr: MQTTSERVER."
+	pub setCallback: #mqtt:command: asFunctionName.
+	"sub connect."
+	pub subscribe: MQTTCommand
 ]
 
 { #category : #'top level' }
-AutoFeederNoMqtt >> start [
+AutoFeederWithMqtt >> start [
 	| a |
 	self isTopLevel: true.
 	a := self class new.
 	a opening.
 	a setup.
+	_thread start: a mqttSubscriber with: #().
 	a main
 ]

@@ -1,19 +1,16 @@
-"
-An AutoFeederTest is a test class for testing the behavior of AutoFeeder
-"
 Class {
-	#name : #AutoFeederTest,
+	#name : #AutoFeederWithMqttTest,
 	#superclass : #TestCase,
 	#category : #'MPyTools-Tests'
 }
 
 { #category : #private }
-AutoFeederTest >> mpCodeFor: aSymbol [
-	^ (AutoFeeder >> aSymbol) asMicroPython
+AutoFeederWithMqttTest >> mpCodeFor: aSymbol [
+	^ (AutoFeederWithMqtt >> aSymbol) asMicroPython
 ]
 
 { #category : #test }
-AutoFeederTest >> testClientId [
+AutoFeederWithMqttTest >> testClientId [
 	| r |
 	r := self mpCodeFor: #clientId.
 	self
@@ -21,7 +18,7 @@ AutoFeederTest >> testClientId [
 		equals:
 			'import ubinascii,machine
 
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def client_id(self):
     return ubinascii.hexlify(machine.unique_id())
 
@@ -29,7 +26,7 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testConnectWifi [
+AutoFeederWithMqttTest >> testConnectWifi [
 	| r |
 	r := self mpCodeFor: #connectWifi.
 	self
@@ -37,7 +34,7 @@ AutoFeederTest >> testConnectWifi [
 		equals:
 			'import time,network
 
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def connect_wifi(self):
     a = network.WLAN(network.STA_IF)
     a.active(True)
@@ -51,7 +48,7 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testError [
+AutoFeederWithMqttTest >> testError [
 	| r |
 	r := self mpCodeFor: #error:.
 	self
@@ -59,7 +56,7 @@ AutoFeederTest >> testError [
 		equals:
 			'import time
 
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def error(self,a):
     print("Error:" + a)
     while True:
@@ -72,21 +69,19 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testFeedCount [
+AutoFeederWithMqttTest >> testFeedCount [
 	| r |
 	r := self mpCodeFor: #feedCount.
 	self
 		assert: r
 		equals:
       '
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def feed_count(self):
     if self.portion > 0:
       c = self.portion
       self.portion = 0
       return c
-    if is_button_on():
-      return 1
     n = now()
     a = n[3]
     b = n[4]
@@ -102,7 +97,7 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testFeedPortion [
+AutoFeederWithMqttTest >> testFeedPortion [
 	| r |
 	r := self mpCodeFor: #feedPortion:.
 	self
@@ -110,27 +105,24 @@ AutoFeederTest >> testFeedPortion [
 		equals:
       'import time
 
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def feed_portion(self,a):
-    print(now())
-    print("feedPortion:" + (str(a)))
     motor_on()
     while is_feed_sw_on():
       time.sleep_ms(100)
     for _ in range(0,a):
-      print("***")
       while not (is_feed_sw_on()):
         time.sleep_ms(100)
       while is_feed_sw_on():
         time.sleep_ms(100)
     motor_off()
-    print("feed done")
+    mqtt_status(("feed " + (str(a))) + " portions")
 
 '
 ]
 
 { #category : #test }
-AutoFeederTest >> testInitialize [
+AutoFeederWithMqttTest >> testInitialize [
 	| r |
 	r := self mpCodeFor: #initialize.
 	self
@@ -139,7 +131,7 @@ AutoFeederTest >> testInitialize [
       'from machine import Pin,SoftI2C
 from neopixel import NeoPixel
 
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def __init__(self):
     self.button = Pin(39,Pin.IN)
     self.sw = Pin(22,Pin.IN)
@@ -151,7 +143,7 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testIsButtonOn [
+AutoFeederWithMqttTest >> testIsButtonOn [
 	| r |
 	r := self mpCodeFor: #isButtonOn.
 	self
@@ -159,7 +151,7 @@ AutoFeederTest >> testIsButtonOn [
 		equals:
       'import time
 
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def is_button_on(self):
     if not ((self.button.value()) == 0):
       return False
@@ -170,7 +162,7 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testIsFeedSwOn [
+AutoFeederWithMqttTest >> testIsFeedSwOn [
 	| r |
 	r := self mpCodeFor: #isFeedSwOn.
 	self
@@ -178,7 +170,7 @@ AutoFeederTest >> testIsFeedSwOn [
 		equals:
       'import time
 
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def is_feed_sw_on(self):
     if not ((self.sw.value()) > 0):
       return False
@@ -189,14 +181,14 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testLed [
+AutoFeederWithMqttTest >> testLed [
 	| r |
 	r := self mpCodeFor: #led:.
 	self
 		assert: r
 		equals:
       '
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def led(self,a):
     self.np[0] = a
     self.np.write()
@@ -205,7 +197,7 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testMain [
+AutoFeederWithMqttTest >> testMain [
 	| r |
 	r := self mpCodeFor: #main.
 	self
@@ -213,17 +205,20 @@ AutoFeederTest >> testMain [
 		equals:
       'import time
 
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def main(self):
     feed_portion(1)
     while True:
       led((0,0,0))
       c = feed_count()
       if c > 0:
-        led((0,0,128))
         feed_portion(c)
         led((128,128,0))
         time.sleep(60)
+        self.portion = 0
+      elif is_button_on():
+        led((0,0,128))
+        feed_portion(1)
       else:
         time.sleep(5)
         led((128,128,128))
@@ -233,14 +228,14 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testMotorOff [
+AutoFeederWithMqttTest >> testMotorOff [
 	| r |
 	r := self mpCodeFor: #motorOff.
 	self
 		assert: r
 		equals:
       '
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def motor_off(self):
     self.i2c.writeto(100,bytes([0,0]))
 
@@ -248,14 +243,14 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testMotorOn [
+AutoFeederWithMqttTest >> testMotorOn [
 	| r |
 	r := self mpCodeFor: #motorOn.
 	self
 		assert: r
 		equals:
 			'
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def motor_on(self):
     self.i2c.writeto(100,bytes([0,253]))
 
@@ -263,7 +258,55 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testNow [
+AutoFeederWithMqttTest >> testMqttCommand [
+	| r |
+	r := self mpCodeFor: #mqtt:command:.
+	self
+		assert: r
+		equals: '
+class AutoFeederWithMqtt:
+  def mqtt_command(self,aTopic,a):
+    print("command received")
+    self.portion = int(a)
+
+'
+]
+
+{ #category : #test }
+AutoFeederWithMqttTest >> testMqttStatus [
+	| r |
+	r := self mpCodeFor: #mqttStatus:.
+	self
+		assert: r
+		equals:
+			'
+class AutoFeederWithMqtt:
+  def mqtt_status(self,a):
+    c = now()
+    b = "{}/{}/{} {}:{}:{} ".format(*c)
+    self.pub.publish("/home/autofeeder1/status",(b + a))
+
+'
+]
+
+{ #category : #test }
+AutoFeederWithMqttTest >> testMqttSubscriber [
+	| r |
+	r := self mpCodeFor: #mqttSubscriber.
+	self
+		assert: r
+		equals: '
+class AutoFeederWithMqtt:
+  def mqtt_subscriber(self):
+    print("subscriver start")
+    while True:
+      self.pub.wait_msg()
+
+'
+]
+
+{ #category : #test }
+AutoFeederWithMqttTest >> testNow [
 	| r |
 	r := self mpCodeFor: #now.
 	self
@@ -271,7 +314,7 @@ AutoFeederTest >> testNow [
 		equals:
       'import time
 
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def now(self):
     return time.localtime((time.mktime(time.localtime())) + 32400)
 
@@ -279,7 +322,7 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testOpening [
+AutoFeederWithMqttTest >> testOpening [
 	| r |
 	r := self mpCodeFor: #opening.
 	self
@@ -287,7 +330,7 @@ AutoFeederTest >> testOpening [
 		equals:
       'import random,time
 
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def opening(self):
     for _ in range(0,20):
       a = (random.randrange(256),random.randrange(256),random.randrange(256))
@@ -299,7 +342,7 @@ class AutoFeeder:
 ]
 
 { #category : #test }
-AutoFeederTest >> testSetup [
+AutoFeederWithMqttTest >> testSetup [
 	| r |
 	r := self mpCodeFor: #setup.
 	self
@@ -307,35 +350,56 @@ AutoFeederTest >> testSetup [
 		equals:
       'import time,ntptime
 
-class AutoFeeder:
+class AutoFeederWithMqtt:
   def setup(self):
     led((128,0,0))
     connect_wifi()
-    led((0,128,0))
     ntptime.settime()
-    time.sleep(1)
+    led((0,128,0))
+    setup_mqtt()
     led((0,0,128))
     if not (100 in (self.i2c.scan())):
+      mqtt_status("motor is not connected")
       error("motor is not connected")
     motor_off()
-    print("Setup done")
     time.sleep(1)
+    mqtt_status("start")
 
 '
 ]
 
 { #category : #test }
-AutoFeederTest >> testStart [
+AutoFeederWithMqttTest >> testSetupMqtt [
+	| r |
+	r := self mpCodeFor: #setupMqtt.
+	self
+		assert: r
+		equals:
+      'from umqtt.robust import MQTTClient
+
+class AutoFeederWithMqtt:
+  def setup_mqtt(self):
+    self.pub = MQTTClient((client_id()),"219.94.240.178")
+    self.pub.connect()
+    self.pub.set_callback(mqtt_command)
+    self.pub.subscribe("/home/autofeeder1/command")
+
+'
+]
+
+{ #category : #test }
+AutoFeederWithMqttTest >> testStart [
 	| r |
 	r := self mpCodeFor: #start.
 	self
 		assert: r
 		equals:
-			'
-print("Starting ...")
-a = AutoFeeder()
+			'import _thread
+
+a = AutoFeederWithMqtt()
 a.opening()
 a.setup()
+_thread.start_new_thread(a.mqtt_subscriber,())
 a.main()
 '
 ]

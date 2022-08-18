@@ -67,6 +67,24 @@ M5AtomLite >> buttonTest2 [
 ]
 
 { #category : #samples }
+M5AtomLite >> gpioTest1 [
+	"(M5AtomLite >> #gpioTest1) asMicroPython inspect"
+
+	| np button |
+	self isFunction: true.
+	button := Pin at: GPIO22 mode: #IN.
+	np := NeoPixel initPin: (Pin at: NEOPIXEL) count: 1.
+	[ np
+		at: 0
+		put:
+			(button value = 0
+				ifTrue: [ #(0 0 0) ]
+				ifFalse: [ #(255 255 255) ]).
+	np write.
+	time sleepMs: 100 ] repeat
+]
+
+{ #category : #samples }
 M5AtomLite >> neopixelTest [
 	"(M5AtomLite >> #neopixelTest1) asMicroPython inspect"
 
@@ -86,5 +104,6 @@ M5AtomLite >> neopixelTest [
 M5AtomLite >> start [
 	self isTopLevel: true.
 	self neopixelTest.
-	self buttonTest1
+	"self buttonTest1"
+	self gpioTest1
 ]

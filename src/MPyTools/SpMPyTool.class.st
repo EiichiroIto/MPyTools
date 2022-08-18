@@ -92,6 +92,11 @@ SpMPyTool >> break [
 	self message: 'stopped' localized
 ]
 
+{ #category : #constants }
+SpMPyTool >> buttonMethodLabel [
+	^ 'select Method' localized
+]
+
 { #category : #'buttons behavior' }
 SpMPyTool >> connect [
 
@@ -285,7 +290,7 @@ SpMPyTool >> getDirectory [
 		self message: msg.
 		^ nil ].
 	cmd := 'import os' , String lf , 'os.listdir()'.
-	ret := proxy evaluate: cmd lines ifError: [ :msg | 
+	ret := proxy evaluate: cmd ifError: [ :msg | 
 		       self message: msg.
 		       ^ nil ].
 	ret ifNil: [ ^ nil ].
@@ -376,7 +381,7 @@ SpMPyTool >> initializePresenters [
 		               state: false;
 		               yourself.
 	buttonMethod := self newButton
-		                label: 'select Method' localized;
+		                label: self buttonMethodLabel;
 		                state: false;
 			              icon: (self iconNamed: #announcement);
 		                yourself.
@@ -424,8 +429,6 @@ SpMPyTool >> input [
 	self autoConnectIfFail: [ :msg | ^ self message: msg ].
 	ret := self multiLineRequest: 'Enter expression' localized initialAnswer: ''.
 	ret ifNil: [ ^ self ].
-	ret := ret lines reject: #isEmpty.
-	ret isEmpty ifTrue: [ ^ self ].
 	proxy isReady ifFalse: [ ^ self ].
 	proxy execute: ret
 ]
@@ -490,11 +493,16 @@ SpMPyTool >> restart [
 { #category : #'buttons behavior' }
 SpMPyTool >> save [
 
-	| target |
+	| target filename |
 	target := self currentTarget.
 	target ifNil: [ ^ self ].
+	filename := self
+		            request: 'Upload file name?' localized
+		            initialAnswer: 'main.py'.
+	(filename isNil or: [ filename isEmpty ]) ifTrue: [ ^ self ].
+	filename := (filename withoutSuffix: '.py') , '.py'.
 	self autoConnectIfFail: [ :msg | ^ self message: msg ].
-	proxy upload: target asMicroPython fileNamed: 'main.py'
+	proxy upload: target asMicroPython fileNamed: filename
 ]
 
 { #category : #utilities }
@@ -521,6 +529,7 @@ SpMPyTool >> selectClass [
 		       self select: 'Select a Class' localized chooseFrom: list ].
 	ret ifNil: [ ^ self ].
 	buttonClass label: ret name.
+	buttonMethod label: self buttonMethodLabel.
 	buttonClass state: true.
 	buttonMethod state: false
 ]
@@ -533,6 +542,7 @@ SpMPyTool >> selectMethod [
 	list := cl methods.
 	list isEmpty ifTrue: [ ^ self ].
 	list := list collect: #selector.
+	list := list sorted.
 	ret := list size = 1
 		       ifTrue: [ ret := list first ]
 		       ifFalse: [ 
@@ -559,7 +569,7 @@ SpMPyTool >> send [
 	target := self currentTarget.
 	target ifNil: [ ^ self ].
 	self autoConnectIfFail: [ :msg | ^ self message: msg ].
-	proxy execute: target asMicroPython lines
+	proxy execute: target asMicroPython
 ]
 
 { #category : #initialization }

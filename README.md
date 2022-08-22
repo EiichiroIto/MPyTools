@@ -77,7 +77,6 @@ MPyTool new
 ```
 
 # MPyToolGUI
-MPyToolGUI is a Spec2 GUI.
 
 ![Screenshot1](https://raw.githubusercontent.com/EiichiroIto/MPyTools/master/images/screenshot1.png)
 

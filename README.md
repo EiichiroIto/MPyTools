@@ -76,6 +76,17 @@ MPyTool new
   upload: ESP8266Sample asMicroPython fileNamed: 'main.py'.
 ```
 
+# MPyToolGUI
+MPyToolGUI is a Spec2 GUI.
+
+![Screenshot1](https://raw.githubusercontent.com/EiichiroIto/MPyTools/master/images/screenshot1.png)
+
+## Usage
+
+```Smalltalk
+SpMPyTool new open
+```
+
 # Installation
 
 ```smalltalk

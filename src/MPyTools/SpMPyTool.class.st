@@ -13,20 +13,32 @@ Class {
 		'labelStatus',
 		'output',
 		'timer',
-		'showOutput',
 		'buttonClass',
 		'buttonMethod',
 		'buttonCode',
-		'buttonInput'
+		'buttonInput',
+		'directory',
+		'isTransferring'
 	],
 	#category : #'MPyTools-GUI'
 }
 
-{ #category : #examples }
-SpMPyTool class >> example [
+{ #category : #'world menu' }
+SpMPyTool class >> menuCommandOn: aBuilder [
+	<worldMenu>
 
-	"SpMPyFrame example"
-	SpMPyTool new open
+	(aBuilder item: 'MPyTool')
+		parent: #Tools;
+		order: 900;
+		target: self;
+		action: [self new open]
+]
+
+{ #category : #examples }
+SpMPyTool class >> open [
+	<script>
+
+	self new open
 ]
 
 { #category : #private }
@@ -202,7 +214,7 @@ SpMPyTool >> deleteFile [
 	proxy isReady ifFalse: [ 
 		^ self message: 'device is not ready' localized ].
 	proxy deleteFileNamed: file.
-	showOutput := false.
+	isTransferring := true.
 	self message: 'delete done' localized
 ]
 
@@ -232,7 +244,6 @@ SpMPyTool >> downloadFile [
 	code := proxy
 		        downloadFileNamed: file
 		        ifError: [ :msg | ^ self message: msg ].
-	showOutput := false.
 	(code isNil or: [ code isEmpty ]) ifTrue: [ ^ self ].
 	code := MicroPythonParser new parse: code.
 	code := UIManager default
@@ -257,8 +268,9 @@ SpMPyTool >> exportString: aContentsString extension: aString [
 	file := UIManager default
 		        chooseForSaveFileReference: 'Export ...' localized
 		        extensions: { aString }
-		        path: FileSystem workingDirectory.
+		        path: directory.
 	file ifNil: [ ^ self ].
+	directory := file parent.
 	f := nil.
 	f := file writeStream.
 	[ f nextPutAll: aContentsString ] ensure: [ f close ]
@@ -323,9 +335,10 @@ SpMPyTool >> importFileWithExtension: aString [
 	file := UIManager default
 		        chooseExistingFileReference: 'Import ...' localized
 		        extensions: { aString }
-		        path: FileSystem workingDirectory.
+		        path: directory.
 	file ifNil: [ ^ nil ].
 	file isFile ifFalse: [ ^ nil ].
+	directory := file parent.
 	f := file readStream.
 	code := [ f contents ] ensure: [ 
 		        f close.
@@ -341,7 +354,8 @@ SpMPyTool >> initialExtent [
 { #category : #initialization }
 SpMPyTool >> initialize [
 	proxy := self newProxy.
-	showOutput := true.
+	isTransferring := false.
+	directory := FileSystem workingDirectory.
 	super initialize
 ]
 
@@ -606,10 +620,11 @@ SpMPyTool >> step [
 	| out |
 	proxy step.
 	self message: ''.
-	proxy isReady ifTrue: [ showOutput := true ].
+	proxy isReady ifTrue: [ isTransferring := false ].
 	out := proxy receiveQueue getAll.
-	showOutput ifTrue: [ 
-		out do: [ :each | self addOutput: each asString ] ].
+	isTransferring
+		ifTrue: [ ^ self message: 'transferring ...' localized ]
+		ifFalse: [ out do: [ :each | self addOutput: each asString ] ].
 	proxy ifTimeoutDo: [ self message: 'timeout' localized ]
 ]
 
@@ -649,5 +664,5 @@ SpMPyTool >> uploadFile [
 	(filename isNil or: [ filename isEmpty ]) ifTrue: [ ^ self ].
 	self autoConnectIfFail: [ :msg | ^ self message: msg ].
 	proxy upload: pair first fileNamed: filename.
-	showOutput := false
+	isTransferring := true
 ]
